@@ -1,0 +1,1679 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Multiverse Deal Desk</title><meta name="description" content="A free terminal for tracking Indian M&amp;A by The Market Multiverse."><style>
+:root{--font-anthropic-sans: "Inter","Segoe UI",system-ui,-apple-system,sans-serif; --font-anthropic-serif: Georgia,"Times New Roman",serif; --cds-dur-slow:.4s;}
+html,body{margin:0;background:#0B0F17;}
+</style><script src="multiverse-deal-desk-d3.min.js"></script><script>
+(function(){
+ const calcs={}, cache={};
+ window.__DATA={}; const ready=fetch('multiverse-deal-desk-data.json?v='+Date.now()).then(r=>r.json()).then(d=>{window.__DATA=d;});
+ function rows(id){ if(id in __DATA) return __DATA[id]; if(calcs[id]){ if(!(id in cache)){ const c=calcs[id]; cache[id]=c.fn(...c.inputs.map(rows)); } return cache[id]; } return null; }
+ window.dash={ data(id){ const r=rows(id); return r==null?{status:'missing',data:[]}:{status:'ok',data:r,columns:r[0]?Object.keys(r[0]):[],meta:[]}; },
+  calc(id,o){calcs[id]=o;}, loader(){}, onData(fn){ window.__fns=(window.__fns||[]); window.__fns.push(fn); ready.then(()=>fn()); window.addEventListener('resize',()=>fn()); },
+  setLink(){}, params(){return {}}, setParams(){}, resetParams(){}, refresh(){}, colors:[] };
+})();
+</script></head><body><div id="dash-root"><style>
+#dash-root { --dash-gutter: 0; }
+.mna {
+  --bg: #0B0F17; --p1: #0F1623; --p2: #1E293B; --ln: #1F2A3B; --ln2: #2C3A50;
+  --tx: #E2E8F0; --mu: #94A3B8; --dm: #64748B; --amb: #F5A524; --cy: #38BDF8;
+  --gr: #34D399; --rd: #F87171; --vi: #A78BFA;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--bg); color: var(--tx); font-family: var(--font-anthropic-sans);
+  font-size: 13px; line-height: 1.4; padding: 12px; container-type: inline-size; min-height: 100%;
+}
+.mna * { box-sizing: border-box; }
+.mna .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.mna .r { text-align: right; }
+.mna .lbl { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--dm); }
+.mna [data-dash-source-state=empty] { color: transparent; }
+.mna [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.mna .fail { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--mu); font-size: 11px; min-height: 60px; }
+.mna .fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--rd); }
+.mna .tagm { font: 9px var(--mono); color: var(--vi); border: 1px solid #4C3F7A; padding: 0 4px; border-radius: 2px; margin-left: 4px; vertical-align: 1px; letter-spacing: .04em; }
+
+.mna-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; border-bottom: 1px solid var(--ln2); padding-bottom: 8px; }
+.mna-brand { font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: .06em; color: var(--amb); }
+.mna-brand span { color: var(--mu); font-weight: 400; letter-spacing: .02em; margin-left: 8px; font-family: var(--font-anthropic-sans); font-size: 12px; }
+.mna-asof { font-family: var(--mono); font-size: 11px; color: var(--dm); }
+.mna-take { margin: 8px 0 10px; font-size: 13px; color: var(--mu); max-width: 120ch; }
+.mna-take b { color: var(--tx); font-weight: 600; font-family: var(--mono); }
+
+.mna-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr)); gap: 1px; background: var(--ln); border: 1px solid var(--ln); }
+.mna-kpi { background: var(--p1); padding: 10px 12px; min-height: 92px; display: flex; flex-direction: column; gap: 4px; }
+.mna-kpi .v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 25px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--tx); }
+.mna-kpi .s { font-family: var(--mono); font-size: 11px; color: var(--mu); }
+.mna-kpi .flag { align-self: flex-start; font-family: var(--mono); font-size: 10px; padding: 1px 6px; border: 1px solid var(--amb); color: var(--amb); border-radius: 2px; letter-spacing: .02em; }
+
+.mna-cmd { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 10px 0; padding: 8px 10px; background: var(--p1); border: 1px solid var(--ln); }
+.mna-search { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--ln2); padding: 4px 8px; min-width: min(100%, 230px); flex: 0 1 260px; }
+.mna-search svg { flex: none; }
+.mna-search input { background: transparent; border: 0; outline: 0; color: var(--tx); font: 12px var(--mono); width: 100%; }
+.mna-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.mna-group .lbl { margin-right: 2px; }
+.mna-chip { font: 11px var(--mono); color: var(--mu); background: transparent; border: 1px solid var(--ln2); padding: 2px 7px; border-radius: 2px; cursor: pointer; }
+.mna-chip:hover { color: var(--tx); border-color: var(--dm); }
+.mna-chip[aria-pressed=true] { color: var(--bg); background: var(--amb); border-color: var(--amb); }
+.mna-clear { font: 11px var(--mono); background: none; border: 0; color: var(--cy); cursor: pointer; padding: 2px 4px; }
+.mna-count { font: 11px var(--mono); color: var(--dm); margin-left: auto; }
+
+.mna-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@container (min-width: 980px) { .mna-split { grid-template-columns: minmax(0, 35fr) minmax(0, 65fr); } }
+.mna-pane { background: var(--p1); border: 1px solid var(--ln); min-width: 0; }
+.mna-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--ln); flex-wrap: wrap; }
+.mna-ph h2 { margin: 0; font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--tx); }
+.mna-ph h2::before { content: "■ "; color: var(--amb); }
+.mna-ph .note { font-size: 11px; color: var(--dm); }
+
+.mna-tw { max-height: 640px; overflow: auto; }
+.mna-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mna-tbl th { position: sticky; top: 0; background: var(--p1); z-index: 1; text-align: left; padding: 0; border-bottom: 1px solid var(--ln2); }
+.mna-tbl th button { all: unset; display: block; width: 100%; box-sizing: border-box; padding: 6px 7px; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dm); cursor: pointer; }
+.mna-tbl th button:hover { color: var(--tx); }
+.mna-tbl th[aria-sort] button { color: var(--amb); }
+.mna-tbl th.r button { text-align: right; }
+.mna-tbl td { padding: 6px 7px; border-bottom: 1px solid var(--ln); vertical-align: top; }
+.mna-tbl tbody tr { cursor: pointer; }
+.mna-tbl tbody tr td:first-child { border-left: 3px solid var(--sc, var(--dm)); font-weight: 600; }
+.mna-tbl tbody tr:hover { background: #142033; }
+.mna-tbl tbody tr.sel { background: #1A2740; }
+.mna-tbl tbody tr.sel td:first-child { color: var(--amb); }
+.mna-tbl td.st { font-family: var(--mono); font-size: 10.5px; color: var(--mu); }
+.mna-tbl tr.pend td.st { color: var(--amb); }
+.mna-tbl td.acq { color: var(--mu); }
+.mna-tbl td.dt { font-family: var(--mono); font-size: 11px; color: var(--mu); white-space: nowrap; }
+@container (max-width: 1240px) { .mna-tbl .st { display: none; } }
+@container (max-width: 560px) { .mna-tbl .acq { display: none; } }
+
+.mna-dh { padding: 10px 12px; border-bottom: 1px solid var(--ln); display: grid; gap: 6px; }
+.mna-names { font-size: 18px; font-weight: 600; line-height: 1.25; }
+.mna-names .arrow { color: var(--amb); margin: 0 6px; font-family: var(--mono); }
+.mna-names .acq { color: var(--mu); font-weight: 500; }
+.mna-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font: 11px var(--mono); }
+.mna-tag { padding: 1px 6px; border: 1px solid var(--ln2); color: var(--mu); border-radius: 2px; }
+.mna-status { padding: 1px 7px; border-radius: 2px; color: var(--bg); background: var(--gr); font-weight: 600; }
+.mna-status.active { background: var(--amb); }
+.mna-dates { display: flex; flex-wrap: wrap; gap: 4px 18px; font: 11px var(--mono); color: var(--mu); }
+.mna-dates b { color: var(--tx); font-weight: 500; }
+.mna-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 104px), 1fr)); gap: 1px; background: var(--ln); border-bottom: 1px solid var(--ln); }
+.mna-metric { background: var(--p1); padding: 7px 10px; }
+.mna-metric .v { font: 500 15px var(--mono); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.mna-metric .v.neg { color: var(--rd); }
+.mna-metric .v.pos { color: var(--gr); }
+.mna-metric .v.na { color: var(--dm); }
+.mna-tabs { display: flex; border-bottom: 1px solid var(--ln); overflow-x: auto; }
+.mna-tab { all: unset; cursor: pointer; padding: 8px 14px; font: 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dm); border-bottom: 2px solid transparent; white-space: nowrap; }
+.mna-tab:hover { color: var(--tx); }
+.mna-tab[aria-selected=true] { color: var(--amb); border-bottom-color: var(--amb); }
+.mna-panel { padding: 12px; }
+.mna [hidden] { display: none !important; }
+.mna-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+.mna-block { border: 1px solid var(--ln); background: var(--bg); padding: 9px 11px; min-width: 0; }
+.mna-block .lbl { display: block; margin-bottom: 5px; }
+.mna-block p { margin: 0; font-size: 12.5px; color: var(--tx); }
+.mna-block p.muted { color: var(--mu); }
+.mna-block.wide { grid-column: 1 / -1; }
+.mna-src { margin-top: 10px; font: 10.5px var(--mono); color: var(--dm); }
+.mna-empty { color: var(--mu); font-size: 12.5px; }
+.mna-empty .mna-chip { margin: 6px 4px 0 0; }
+
+.mna-val { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@container (min-width: 1180px) { .mna-val { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } }
+.mna-chart { position: relative; min-height: 270px; }
+.mna-tip { position: absolute; pointer-events: none; background: #0B0F17; border: 1px solid var(--ln2); box-shadow: 0 6px 18px rgba(0,0,0,.45); padding: 5px 8px; font-size: 11px; color: var(--tx); max-width: 260px; z-index: 5; display: none; }
+.mna-tip .h { color: var(--mu); margin-bottom: 2px; }
+.mna-tip .n { font-family: var(--mono); font-weight: 600; }
+.mna-side { display: grid; gap: 10px; align-content: start; }
+.mna-eps { display: grid; gap: 6px; }
+.mna-epsr { display: grid; grid-template-columns: 26px 1fr 58px; align-items: center; gap: 8px; font: 11px var(--mono); }
+.mna-epsb { position: relative; height: 12px; background: var(--p2); }
+.mna-epsb::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--dm); }
+.mna-epsb span { position: absolute; top: 2px; bottom: 2px; }
+.mna-kv { display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; font-size: 12px; margin: 0; }
+.mna-kv dt { color: var(--mu); }
+.mna-kv dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.mna-kv dd.pos { color: var(--gr); }
+.mna-kv dd.neg { color: var(--rd); }
+.mna-axisnote { font: 10.5px var(--mono); color: var(--dm); margin-top: 4px; }
+
+.mna-bneck { border: 1px solid var(--amb); background: rgba(245,165,36,.07); padding: 9px 11px; margin-bottom: 10px; display: grid; gap: 3px; }
+.mna-bneck .lbl { color: var(--amb); }
+.mna-steps { list-style: none; margin: 0; padding: 0; }
+.mna-step { display: grid; grid-template-columns: 22px 1fr auto; gap: 2px 10px; position: relative; padding-bottom: 12px; }
+.mna-step::before { content: ""; position: absolute; left: 6px; top: 16px; bottom: 0; width: 1px; background: var(--ln2); }
+.mna-step:last-child::before { display: none; }
+.mna-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--dm); margin-top: 2px; background: var(--bg); position: relative; z-index: 1; }
+.mna-step.done .mna-dot { background: var(--gr); border-color: var(--gr); }
+.mna-step.active .mna-dot { background: var(--amb); border-color: var(--amb); box-shadow: 0 0 0 3px rgba(245,165,36,.25); }
+.mna-step .t { font-size: 12.5px; font-weight: 500; }
+.mna-step.pending .t { color: var(--mu); }
+.mna-step .d { font: 11px var(--mono); color: var(--mu); white-space: nowrap; }
+.mna-step.active .d { color: var(--amb); }
+.mna-step .n { grid-column: 2 / 4; font-size: 11.5px; color: var(--dm); }
+.mna-risk { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; font-size: 12px; }
+.mna-meter { display: flex; gap: 3px; }
+.mna-meter i { width: 16px; height: 8px; background: var(--p2); }
+.mna-meter i.on { background: var(--amb); }
+.mna-meter.hi i.on { background: var(--rd); }
+
+.mna-sector { margin-top: 10px; }
+.mna-sgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 10px 12px; }
+@container (min-width: 980px) { .mna-sgrid { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); } }
+.mna-sgrid .lbl.h { display: block; margin-bottom: 6px; }
+.mna-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 11px var(--mono); color: var(--mu); margin-top: 6px; }
+.mna-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.mna-legend i.ring { background: transparent; border: 1.5px solid var(--mu); }
+.mna-banks { display: grid; gap: 6px; }
+.mna-bank { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline; padding: 7px 9px; border: 1px solid var(--ln); background: var(--bg); font-size: 12px; cursor: pointer; }
+.mna-bank:hover { border-color: var(--ln2); }
+.mna-foot { margin-top: 10px; font-size: 11px; color: var(--dm); line-height: 1.5; border-top: 1px solid var(--ln); padding-top: 8px; }
+.mna-foot b { color: var(--mu); font-weight: 600; }
+.mna svg text { font-family: var(--mono); }
+
+/* catalysts */
+.mna-cat { margin-top: 10px; }
+.mna-catrow { display: flex; gap: 8px; overflow-x: auto; padding: 8px 10px 10px; scrollbar-width: thin; }
+.mna-catcard { flex: 0 0 auto; width: 210px; border: 1px solid var(--ln); background: var(--bg); padding: 7px 9px; cursor: pointer; display: grid; gap: 3px; }
+.mna-catcard:hover { border-color: var(--ln2); }
+.mna-catcard.soon { border-color: var(--amb); background: rgba(245,165,36,.06); }
+.mna-catcard .d { font: 600 12px var(--mono); color: var(--tx); }
+.mna-catcard.soon .d { color: var(--amb); }
+.mna-catcard .w { font: 10px var(--mono); color: var(--dm); text-transform: uppercase; letter-spacing: .06em; }
+.mna-catcard .e { font-size: 12px; color: var(--mu); line-height: 1.3; }
+.mna-catcard .t { justify-self: start; font: 9.5px var(--mono); color: var(--cy); border: 1px solid #1E4A66; padding: 0 4px; border-radius: 2px; }
+
+/* pin pill */
+.mna-pin { font: 11px var(--mono); background: var(--cy); color: var(--bg); border: 0; border-radius: 2px; padding: 2px 8px; cursor: pointer; }
+
+/* generic two-up rows */
+.mna-row2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 10px; }
+@container (min-width: 980px) { .mna-row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.mna-row2 > .mna-pane { margin: 0; }
+.mna-body { padding: 10px 12px; }
+.mna-foot2 { font-size: 10.5px; color: var(--dm); margin-top: 6px; font-family: var(--mono); }
+
+/* regulatory queue */
+.mna-queue { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); gap: 8px; padding: 10px 12px; }
+.mna-qcol { border: 1px solid var(--ln); background: var(--bg); min-width: 0; }
+.mna-qcol h3 { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--ln); font: 600 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--tx); }
+.mna-qcol h3 .c { color: var(--amb); font-weight: 500; letter-spacing: 0; text-transform: none; }
+.mna-qcol.muted h3 { color: var(--dm); }
+.mna-qlist { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 8px; }
+.mna-qchip { font: 11px var(--mono); color: var(--tx); background: var(--p2); border: 1px solid transparent; border-left: 3px solid var(--sc, var(--dm)); padding: 2px 6px; cursor: pointer; border-radius: 2px; }
+.mna-qchip:hover, .mna-qchip.sel { border-color: var(--amb); }
+
+/* spreads */
+.mna-stbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mna-stbl th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dm); padding: 5px 6px; border-bottom: 1px solid var(--ln2); font-weight: 400; }
+.mna-stbl th.r, .mna-stbl td.r { text-align: right; }
+.mna-stbl td { padding: 7px 6px; border-bottom: 1px solid var(--ln); font-family: var(--mono); font-variant-numeric: tabular-nums; vertical-align: top; }
+.mna-stbl td:first-child { font-family: var(--font-anthropic-sans); }
+.mna-stbl tbody tr { cursor: pointer; }
+.mna-stbl tbody tr:hover { background: #142033; }
+.mna-stbl .sub { display: block; font-size: 10.5px; color: var(--dm); font-family: var(--font-anthropic-sans); margin-top: 2px; }
+.mna-stbl .hot { color: var(--amb); }
+
+/* heatmap */
+.mna-heat { width: 100%; border-collapse: separate; border-spacing: 2px; font-size: 11px; }
+.mna-heat th { font: 10px var(--mono); color: var(--dm); text-transform: uppercase; letter-spacing: .06em; padding: 3px 4px; text-align: center; font-weight: 400; }
+.mna-heat th.rl { text-align: right; text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--mu); white-space: nowrap; }
+.mna-heat td { text-align: center; padding: 5px 4px; font-family: var(--mono); font-variant-numeric: tabular-nums; cursor: pointer; border-radius: 2px; min-width: 64px; }
+.mna-heat td .n { display: block; font-size: 9.5px; opacity: .75; }
+.mna-heat td.on { outline: 1px solid var(--amb); }
+.mna-heat td.tot { cursor: default; color: var(--mu); background: transparent !important; }
+
+/* lists with in-row bars */
+.mna-blist { display: grid; gap: 4px; }
+.mna-brow { display: grid; grid-template-columns: minmax(90px, 30%) 1fr auto; gap: 8px; align-items: center; font-size: 11.5px; cursor: pointer; padding: 2px 0; }
+.mna-brow:hover .nm { color: var(--tx); }
+.mna-brow .nm { color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mna-brow.on .nm { color: var(--amb); }
+.mna-brow .bar { height: 10px; background: var(--p2); border-radius: 2px; position: relative; overflow: hidden; }
+.mna-brow .bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+.mna-brow .v { font: 11px var(--mono); color: var(--mu); white-space: nowrap; text-align: right; }
+.mna-corr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@container (min-width: 620px) { .mna-corr { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* leaderboard */
+.mna-ltbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mna-ltbl th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dm); padding: 5px 6px; border-bottom: 1px solid var(--ln2); font-weight: 400; }
+.mna-ltbl th.r, .mna-ltbl td.r { text-align: right; }
+.mna-ltbl td { padding: 5px 6px; border-bottom: 1px solid var(--ln); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.mna-ltbl td:first-child { font-family: var(--font-anthropic-sans); font-weight: 600; }
+.mna-ltbl tbody tr { cursor: pointer; }
+.mna-ltbl tbody tr:hover { background: #142033; }
+.mna-ltbl tbody tr.on td:first-child { color: var(--amb); }
+.mna-ltbl .ib { display: inline-block; height: 8px; background: var(--amb); opacity: .7; border-radius: 2px; vertical-align: 0; margin-right: 6px; }
+.mna-ltw { max-height: 360px; overflow: auto; }
+.mna-ltw thead th { position: sticky; top: 0; background: var(--p1); }
+
+/* ---- v4: pages, companies, parties, sector analytics ---- */
+.mna-pages { display: flex; gap: 0; margin-top: 10px; border-bottom: 1px solid var(--ln2); }
+.mna-page-tab { all: unset; cursor: pointer; padding: 9px 18px; font: 600 11.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dm); border: 1px solid transparent; border-bottom: 0; margin-bottom: -1px; }
+.mna-page-tab:hover { color: var(--tx); }
+.mna-page-tab[aria-selected=true] { color: var(--amb); background: var(--p1); border-color: var(--ln2); }
+.mna-page-tab .k { color: var(--dm); margin-right: 6px; font-weight: 400; }
+.mna-page-tab[aria-selected=true] .k { color: var(--mu); }
+.mna-co { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.mna-cocard { border: 1px solid var(--ln); background: var(--bg); min-width: 0; display: flex; flex-direction: column; }
+.mna-cohead { padding: 9px 11px; border-bottom: 1px solid var(--ln); display: grid; gap: 3px; }
+.mna-cohead .side { font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--amb); }
+.mna-cohead .nm { font-size: 14.5px; font-weight: 600; line-height: 1.25; }
+.mna-cohead .meta { font: 11px var(--mono); color: var(--mu); }
+.mna-codesc { padding: 9px 11px; font-size: 12.5px; color: var(--tx); }
+.mna-codesc.na { color: var(--dm); font-style: italic; }
+.mna-cofin { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 1px; background: var(--ln); border-top: 1px solid var(--ln); margin-top: auto; }
+.mna-cofin > div { background: var(--p1); padding: 7px 10px; }
+.mna-cofin .v { font: 500 14px var(--mono); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.mna-cofin .u { font: 10px var(--mono); color: var(--dm); margin-left: 3px; }
+.mna-cofoot { padding: 6px 11px; font: 10.5px var(--mono); color: var(--dm); border-top: 1px solid var(--ln); }
+.mna-ptbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mna-ptbl th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dm); padding: 6px; border-bottom: 1px solid var(--ln2); font-weight: 400; }
+.mna-ptbl td { padding: 7px 6px; border-bottom: 1px solid var(--ln); vertical-align: top; }
+.mna-ptbl td:first-child { font-weight: 600; }
+.mna-ptbl .role { display: inline-block; font: 10.5px var(--mono); padding: 1px 6px; border-radius: 2px; border: 1px solid var(--ln2); color: var(--mu); white-space: nowrap; }
+.mna-ptbl .role.fin { color: #38BDF8; border-color: #1E4A66; }
+.mna-ptbl .role.sell { color: #F5A524; border-color: #6B4A12; }
+.mna-ptbl .role.adv { color: #A78BFA; border-color: #4C3F7A; }
+.mna-ptbl .role.eq { color: #34D399; border-color: #1F5A45; }
+.mna-ptbl .det { color: var(--mu); }
+.mna-psum { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.mna-psum span { font: 11px var(--mono); border: 1px solid var(--ln); background: var(--bg); padding: 3px 8px; color: var(--mu); }
+.mna-psum b { color: var(--tx); font-weight: 600; }
+.mna-treemap { position: relative; min-height: 420px; }
+.mna-sstbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mna-sstbl th { text-align: left; font: 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dm); padding: 6px; border-bottom: 1px solid var(--ln2); font-weight: 400; white-space: nowrap; }
+.mna-sstbl th.r, .mna-sstbl td.r { text-align: right; }
+.mna-sstbl td { padding: 6px; border-bottom: 1px solid var(--ln); font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mna-sstbl td:first-child { font-family: var(--font-anthropic-sans); font-weight: 600; border-left: 3px solid var(--sc, var(--dm)); }
+.mna-sstbl td.lg { font-family: var(--font-anthropic-sans); color: var(--mu); white-space: normal; }
+.mna-sstbl tbody tr { cursor: pointer; }
+.mna-sstbl tbody tr:hover { background: #142033; }
+.mna-sstbl tbody tr.on td:first-child { color: var(--amb); }
+.mna-sstbl .pbar { display: inline-block; width: 46px; height: 6px; background: var(--p2); vertical-align: 1px; margin-left: 6px; position: relative; }
+.mna-sstbl .pbar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--amb); }
+.mna-legend.sq i { border-radius: 1px; }
+</style>
+
+<div class="mna" id="mna">
+  <header class="mna-top" id="top">
+    <div class="mna-brand">MULTIVERSE DEAL DESK<span>by The Market Multiverse · Listed-acquirer deals since Jan 2025 · domestic, inbound, outbound</span></div>
+    <div class="mna-asof">DEALS AS OF 17-OCT-26 · RATES <span data-source="macro" data-field="as_of" data-where="metric=india_10y" data-fmt="date" class="dash-skeleton">—</span></div>
+  </header>
+  <p class="mna-take" id="takeaway">
+    <b data-source="kpis" data-field="deals">—</b> deals tracked, with <b data-source="kpis" data-field="disclosed_value_cr" data-fmt="crU">—</b> of disclosed value. <b data-source="kpis" data-field="pending_count">—</b> are still pending, worth <b data-source="kpis" data-field="pending_value_cr" data-fmt="crU">—</b>, led by <span id="tk-lead" data-source="deals">—</span>. Outbound buys account for <b data-source="kpis" data-field="outbound_share" data-fmt="pct1">—</b> of value, against a <b data-source="macro" data-field="value" data-where="metric=india_10y" data-fmt="pct">—</b> 10Y G-sec.
+  </p>
+
+  <section class="mna-kpis" id="kpis">
+    <div class="mna-kpi" id="kpi-value">
+      <span class="lbl">Disclosed deal value · Jan-25 → today</span>
+      <span class="v dash-skeleton" data-source="kpis" data-field="disclosed_value_cr" data-fmt="crU">—</span>
+      <span class="s">$<span data-source="kpis" data-field="disclosed_value_usd_b" data-fmt="n1">—</span>B · <span data-source="kpis" data-field="disclosed">—</span> of <span data-source="kpis" data-field="deals">—</span> deals disclosed</span>
+    </div>
+    <div class="mna-kpi" id="kpi-pending">
+      <span class="lbl">Live pipeline · pending</span>
+      <span class="v dash-skeleton" data-source="kpis" data-field="pending_value_cr" data-fmt="crU">—</span>
+      <span class="s"><span data-source="kpis" data-field="pending_count">—</span> deals awaiting approvals or close</span>
+    </div>
+    <div class="mna-kpi" id="kpi-flow">
+      <span class="lbl">Outbound share of value</span>
+      <span class="v dash-skeleton" data-source="kpis" data-field="outbound_share" data-fmt="pct1">—</span>
+      <span class="s">Inbound <span data-source="kpis" data-field="inbound_share" data-fmt="pct1">—</span> · domestic the rest</span>
+    </div>
+    <div class="mna-kpi" id="kpi-multiple">
+      <span class="lbl">Wtd avg EV/EBITDA <span class="tagm">MODELED</span></span>
+      <span class="v dash-skeleton" data-source="kpis" data-field="wavg_ev_ebitda" data-fmt="x">—</span>
+      <span class="s"><span data-source="kpis" data-field="modeled_n">—</span> flagship non-financial deals</span>
+    </div>
+    <div class="mna-kpi" id="kpi-gsec">
+      <span class="lbl">India 10Y G-sec</span>
+      <span class="v dash-skeleton" data-source="macro" data-field="value" data-where="metric=india_10y" data-fmt="pct">—</span>
+      <span class="s">Term spread vs repo <span data-source="rates" data-field="term_spread_bp" data-fmt="bp">—</span></span>
+    </div>
+    <div class="mna-kpi" id="kpi-regime">
+      <span class="lbl">RBI repo rate</span>
+      <span class="v dash-skeleton" data-source="macro" data-field="value" data-where="metric=repo" data-fmt="pct">—</span>
+      <span class="s">India–US 10Y <span data-source="rates" data-field="india_us_bp" data-fmt="bp">—</span></span>
+      <span class="flag" id="regime-flag" data-source="macro" data-field="note" data-where="metric=repo">—</span>
+    </div>
+  </section>
+
+
+  <nav class="mna-pages" role="tablist" id="pages">
+    <button class="mna-page-tab" role="tab" id="page-terminal" data-page="terminal" aria-selected="true" type="button"><span class="k">F1</span>Deal Terminal</button>
+    <button class="mna-page-tab" role="tab" id="page-analytics" data-page="analytics" aria-selected="false" type="button"><span class="k">F2</span>Market Analytics</button>
+  </nav>
+
+  <section class="mna-cmd" id="command-bar">
+    <label class="mna-search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search target / acquirer" aria-label="Search target or acquirer" autocomplete="off">
+    </label>
+    <div class="mna-group" id="f-phase"><span class="lbl">Stage</span></div>
+    <div class="mna-group" id="f-geography"><span class="lbl">Flow</span></div>
+    <div class="mna-group" id="f-form"><span class="lbl">Form</span></div>
+    <div class="mna-group" id="f-year"><span class="lbl">Year</span></div>
+    <div class="mna-group" id="f-sector"><span class="lbl">Sector</span></div>
+    <button class="mna-pin" id="pin" type="button" hidden></button>
+    <button class="mna-clear" id="clear" type="button">Clear</button>
+    <span class="mna-count" id="count"></span>
+  </section>
+
+  <div class="mna-page" id="pg-terminal">
+  <section class="mna-pane mna-cat" id="catalysts">
+    <div class="mna-ph"><h2>Catalyst calendar</h2><span class="note">Upcoming hard dates across the pipeline · amber = within 14 days · click to open the deal</span></div>
+    <div class="mna-catrow" id="cat-row" data-source="catalysts deals"><div class="dash-skeleton" style="height:70px;width:100%"></div></div>
+  </section>
+
+  <section class="mna-split">
+    <div class="mna-pane" id="pipeline">
+      <div class="mna-ph"><h2>Pipeline</h2><span class="note">Sortable · click a row</span></div>
+      <div class="mna-tw">
+        <table class="mna-tbl" id="pipeline-table" data-source="deals" data-row-key="id">
+          <thead><tr>
+            <th data-field="short"><button type="button" data-k="short">Target</button></th>
+            <th data-field="acquirer" class="acq"><button type="button" data-k="acquirer">Acquirer</button></th>
+            <th data-field="value_inr_cr" class="r"><button type="button" data-k="value_inr_cr">₹ Cr</button></th>
+            <th data-field="announced"><button type="button" data-k="announced">Date</button></th>
+            <th data-field="status" class="st"><button type="button" data-k="phase">Stage</button></th>
+          </tr></thead>
+          <tbody id="pl-body"><tr><td colspan="5"><div class="dash-skeleton" style="height:120px"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mna-pane" id="deal-terminal">
+      <div class="mna-dh">
+        <div class="mna-names"><span class="acq" data-s="deals" data-f="acquirer">—</span><span class="arrow">→</span><span data-s="deals" data-f="target">—</span></div>
+        <div class="mna-tags">
+          <span class="mna-status" id="d-status" data-s="deals" data-f="status">—</span>
+          <span class="mna-tag" data-s="deals" data-f="sector">—</span>
+          <span class="mna-tag" data-s="deals" data-f="geography">—</span>
+          <span class="mna-tag" data-s="deals" data-f="form">—</span>
+        </div>
+        <div class="mna-dates">
+          <span>ANNOUNCED <b data-s="deals" data-f="announced">—</b></span>
+          <span>CLOSED <b data-s="deals" data-f="closed">—</b></span>
+          <span>ACQUIRER <b data-s="deals" data-f="acquirer_listing">—</b></span>
+          <span>TARGET <b data-s="deals" data-f="target_type">—</b></span>
+        </div>
+      </div>
+      <div class="mna-metrics" id="deal-metrics">
+        <div class="mna-metric"><div class="lbl">Deal value ₹ Cr</div><div class="v" data-s="deals" data-f="value_inr_cr" data-fmt="cr">—</div></div>
+        <div class="mna-metric"><div class="lbl">Deal value USD M</div><div class="v" data-s="deals" data-f="value_usd_m" data-fmt="cr">—</div></div>
+        <div class="mna-metric"><div class="lbl">Stake acquired</div><div class="v" data-s="deals" data-f="stake_pct" data-fmt="pctS">—</div></div>
+        <div class="mna-metric"><div class="lbl">Premium (reported)</div><div class="v" data-s="deals" data-f="premium_pct" data-fmt="spct">—</div></div>
+        <div class="mna-metric"><div class="lbl"><span id="m-mult-l">EV/EBITDA</span><span class="tagm">M</span></div><div class="v" id="m-mult" data-s="economics" data-f="ev_ebitda" data-fmt="x">—</div></div>
+        <div class="mna-metric"><div class="lbl">Exp. IRR<span class="tagm">M</span></div><div class="v" data-s="economics" data-f="irr" data-fmt="pct">—</div></div>
+        <div class="mna-metric"><div class="lbl">EPS Y2<span class="tagm">M</span></div><div class="v" data-s="economics" data-f="eps_y2" data-fmt="spct" data-sign="1">—</div></div>
+        <div class="mna-metric"><div class="lbl"><span id="m-lev-l">PF leverage</span><span class="tagm">M</span></div><div class="v" id="m-lev" data-s="economics" data-f="lev_value">—</div></div>
+      </div>
+      <div class="mna-tabs" role="tablist">
+        <button class="mna-tab" role="tab" id="tab-overview" data-tab="overview" aria-selected="true" type="button">Overview</button>
+        <button class="mna-tab" role="tab" id="tab-companies" data-tab="companies" aria-selected="false" type="button">Companies</button>
+        <button class="mna-tab" role="tab" id="tab-capital" data-tab="capital" aria-selected="false" type="button">Capital &amp; advisors</button>
+        <button class="mna-tab" role="tab" id="tab-valuation" data-tab="valuation" aria-selected="false" type="button">Valuation &amp; synergies</button>
+        <button class="mna-tab" role="tab" id="tab-regulatory" data-tab="regulatory" aria-selected="false" type="button">Regulatory &amp; risk</button>
+      </div>
+
+      <div class="mna-panel" id="panel-overview">
+        <div class="mna-grid2">
+          <div class="mna-block wide"><span class="lbl">Deal rationale</span><p data-s="deals" data-f="rationale">—</p></div>
+          <div class="mna-block"><span class="lbl">Consideration &amp; structure</span><p data-s="deals" data-f="consideration">—</p></div>
+          <div class="mna-block"><span class="lbl">Approvals</span><p class="muted" data-s="deals" data-f="approvals">—</p></div>
+          <div class="mna-block"><span class="lbl">Financing</span><p data-s="deals" data-f="financing">—</p></div>
+          <div class="mna-block"><span class="lbl">Advisor bench</span><p class="muted" data-s="deals" data-f="advisors">—</p></div>
+          <div class="mna-block wide" id="tax-block"><span class="lbl">Cross-border structuring &amp; tax</span><p class="muted" data-s="deals" data-f="tax_structuring">—</p></div>
+        </div>
+        <div class="mna-src">SOURCE · <span data-s="deals" data-f="source">—</span></div>
+      </div>
+
+      <div class="mna-panel" id="panel-companies" hidden>
+        <div class="mna-co" id="co-cards" data-source="companies"></div>
+        <div class="mna-src">Financials are the latest reported fiscal year from company results (sources on each card). Cards without figures show profile data only.</div>
+      </div>
+
+      <div class="mna-panel" id="panel-capital" hidden>
+        <div class="mna-psum" id="cap-sum"></div>
+        <table class="mna-ptbl" id="parties" data-source="parties" data-row-key="key">
+          <thead><tr><th data-field="name">Party</th><th data-field="role">Role</th><th data-field="type">Type</th><th data-field="detail">Detail</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="mna-block" style="margin-top:10px"><span class="lbl">Financing structure (deal record)</span><p data-s="deals" data-f="financing">—</p></div>
+        <div class="mna-src">Underwriters, lenders, co-investors, sellers (including PE exits) and advisors as publicly reported. Roles marked "(planned)" are not yet executed.</div>
+      </div>
+
+      <div class="mna-panel" id="panel-valuation" hidden>
+        <div class="mna-empty" id="val-empty" hidden>
+          <p style="margin:0 0 4px">No modeled bridge for this deal. Modeled economics (bridge, EPS, IRR, synergies) cover these flagship deals:</p>
+          <div id="val-flagships"></div>
+        </div>
+        <div class="mna-val" id="val-body">
+          <div class="mna-block">
+            <span class="lbl">Value bridge · standalone → post-synergy pro forma (₹ Cr) <span class="tagm">MODELED</span></span>
+            <div class="mna-chart" id="bridge-chart" data-source="bridge economics"></div>
+            <div class="mna-axisnote" id="bridge-note"></div>
+          </div>
+          <div class="mna-side">
+            <div class="mna-block">
+              <span class="lbl">Pro forma EPS accretion / (dilution)</span>
+              <div class="mna-eps">
+                <div class="mna-epsr"><span>Y1</span><div class="mna-epsb" id="eps1-bar" data-source="economics"><span></span></div><span class="r" data-s="economics" data-f="eps_y1" data-fmt="spct" data-sign="1">—</span></div>
+                <div class="mna-epsr"><span>Y2</span><div class="mna-epsb" id="eps2-bar" data-source="economics"><span></span></div><span class="r" data-s="economics" data-f="eps_y2" data-fmt="spct" data-sign="1">—</span></div>
+              </div>
+            </div>
+            <div class="mna-block">
+              <span class="lbl">Returns vs cost of capital</span>
+              <dl class="mna-kv">
+                <dt>Expected deal IRR</dt><dd data-s="economics" data-f="irr" data-fmt="pct">—</dd>
+                <dt id="roic-l">ROIC (Y3)</dt><dd data-s="economics" data-f="roic_y3" data-fmt="pct">—</dd>
+                <dt id="wacc-l">WACC</dt><dd data-s="economics" data-f="wacc" data-fmt="pct">—</dd>
+                <dt>ROIC – WACC spread</dt><dd data-s="deal_calcs" data-f="roic_spread_bp" data-fmt="bp" data-sign="1">—</dd>
+              </dl>
+            </div>
+            <div class="mna-block">
+              <span class="lbl">Synergy case (run-rate, ₹ Cr)</span>
+              <dl class="mna-kv">
+                <dt>Hard cost synergies (EBITDA)</dt><dd data-s="economics" data-f="cost_syn_rr" data-fmt="cr">—</dd>
+                <dt>Revenue synergies (revenue)</dt><dd data-s="economics" data-f="rev_syn_rr" data-fmt="cr">—</dd>
+                <dt>One-off integration cost</dt><dd data-s="economics" data-f="integration_cost" data-fmt="cr">—</dd>
+                <dt>Value created vs consideration</dt><dd data-s="deal_calcs" data-f="created_cr" data-fmt="crS" data-sign="1">—</dd>
+                <dt>As % of consideration</dt><dd data-s="deal_calcs" data-f="created_pct" data-fmt="spct" data-sign="1">—</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mna-panel" id="panel-regulatory" hidden>
+        <div class="mna-bneck"><span class="lbl">Critical path</span><span id="bneck" data-s="deals" data-f="bottleneck">—</span></div>
+        <div class="mna-grid2">
+          <div class="mna-block">
+            <span class="lbl" id="steps-l">Approval tracker</span>
+            <ol class="mna-steps" id="steps"></ol>
+          </div>
+          <div class="mna-side">
+            <div class="mna-block" id="risk-block">
+              <span class="lbl">Risk scoring (1 = low, 5 = high) <span class="tagm">MODELED</span></span>
+              <div class="mna-risk">
+                <span>Execution / integration · <span class="mono" data-s="economics" data-f="exec_risk">—</span>/5</span><span class="mna-meter" id="exec-meter"></span>
+                <span>Regulatory · <span class="mono" data-s="economics" data-f="reg_risk">—</span>/5</span><span class="mna-meter" id="reg-meter"></span>
+              </div>
+            </div>
+            <div class="mna-block"><span class="lbl">Approvals</span><p class="muted" data-s="deals" data-f="approvals">—</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mna-pane mna-sector" id="regulatory-queue">
+    <div class="mna-ph"><h2>Regulatory queue · pending deals by gating approval</h2><span class="note"><span data-source="kpis" data-field="pending_count">—</span> pending deals · a deal can sit in more than one column · click a chip to open it</span></div>
+    <div class="mna-queue" id="queue" data-source="approval_queue deals"></div>
+  </section>
+
+  <section class="mna-row2">
+    <div class="mna-pane" id="offer-spreads">
+      <div class="mna-ph"><h2>Open-offer &amp; tender spread tracker</h2><span class="note">Offer price vs last traded price</span></div>
+      <div class="mna-body">
+        <table class="mna-stbl" id="spread-table" data-source="spreads" data-row-key="id">
+          <thead><tr><th data-field="security">Target</th><th class="r" data-field="offer_price">Offer</th><th class="r" data-field="price">Last</th><th class="r" data-field="gross_pct">Gross</th><th class="r" data-field="days">Days</th><th class="r" data-field="annualized_pct">Ann.</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="mna-foot2">Benchmarks: US 10Y <span data-source="macro" data-field="value" data-where="metric=us_10y" data-fmt="pct">—</span> · India 10Y <span data-source="macro" data-field="value" data-where="metric=india_10y" data-fmt="pct">—</span>. Prices are a snapshot as of mid-Oct-26, not live. Payout dates marked ~ are estimates. EPL (all-stock merger) and Sapphire (share swap) have no cash offer, so no spread is shown.</div>
+      </div>
+    </div>
+    <div class="mna-pane" id="market-reaction">
+      <div class="mna-ph"><h2>Market reaction on announcement</h2><span class="note">Share move on announcement day, as reported</span></div>
+      <div class="mna-body">
+        <div class="mna-chart" id="reaction-chart" data-source="reactions" style="min-height:220px"></div>
+        <div class="mna-foot2">Intraday or close as reported by the press (basis on hover). Not an event study: not adjusted for market moves.</div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <div class="mna-page" id="pg-analytics" hidden>
+  <section class="mna-pane mna-sector" id="sector-treemap">
+    <div class="mna-ph"><h2>Deal value map · sector → deal</h2><span class="note">Tile area = disclosed ₹ Cr · click a tile to open the deal in the terminal</span></div>
+    <div class="mna-body"><div class="mna-treemap" id="treemap" data-source="deals"></div></div>
+  </section>
+
+  <section class="mna-row2">
+    <div class="mna-pane" id="sector-mix">
+      <div class="mna-ph"><h2>Sector value by flow</h2><span class="note">Disclosed ₹ Cr · domestic, inbound, outbound</span></div>
+      <div class="mna-body">
+        <div class="mna-chart" id="sector-stack" data-source="sector_flow by_sector" style="min-height:300px"></div>
+        <div class="mna-legend sq" id="stack-legend"></div>
+      </div>
+    </div>
+    <div class="mna-pane" id="sector-year">
+      <div class="mna-ph"><h2>Sector value by year</h2><span class="note">Disclosed ₹ Cr · by announcement year (2025 includes Dec-24)</span></div>
+      <div class="mna-body">
+        <div class="mna-chart" id="sector-years" data-source="sector_stats" style="min-height:300px"></div>
+        <div class="mna-legend sq" id="year-legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mna-pane mna-sector" id="sector-table">
+    <div class="mna-ph"><h2>Sector scorecard</h2><span class="note">Click a sector to filter both pages</span></div>
+    <div class="mna-body" style="overflow-x:auto">
+      <table class="mna-sstbl" id="sector-stats" data-source="sector_stats" data-row-key="sector">
+        <thead><tr>
+          <th data-field="sector">Sector</th><th class="r" data-field="deals">Deals</th><th class="r" data-field="value_cr">₹ Cr disclosed</th><th class="r" data-field="share_pct">Share</th>
+          <th class="r" data-field="avg_cr">Avg ticket</th><th class="r" data-field="pending_value_cr">Pending ₹ Cr</th><th class="r" data-field="pending_share_pct">% pending</th>
+          <th class="r" data-field="cross_border_pct">% cross-border</th><th data-field="largest">Largest deal</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mna-row2">
+    <div class="mna-pane" id="sector-flow">
+      <div class="mna-ph"><h2>Sector × flow heatmap</h2><span class="note">Disclosed ₹ Cr · deal count · click a cell to filter</span></div>
+      <div class="mna-body" style="overflow-x:auto">
+        <table class="mna-heat" id="heat" data-source="sector_flow"></table>
+      </div>
+    </div>
+    <div class="mna-pane" id="corridors">
+      <div class="mna-ph"><h2>Cross-border corridors</h2><span class="note">Click a country to filter</span></div>
+      <div class="mna-body mna-corr">
+        <div><span class="lbl" style="display:block;margin-bottom:6px">Inbound · buyer country</span><div class="mna-blist" id="corr-in" data-source="corridors"></div></div>
+        <div><span class="lbl" style="display:block;margin-bottom:6px">Outbound · target country</span><div class="mna-blist" id="corr-out" data-source="corridors"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mna-row2">
+    <div class="mna-pane" id="deal-flow">
+      <div class="mna-ph"><h2>Deal flow over time</h2><span class="note">₹ Cr (log) · hollow = pending · click a point</span></div>
+      <div class="mna-body">
+        <div class="mna-chart" id="timeline" data-source="deals" style="min-height:320px"></div>
+        <div class="mna-legend" id="legend" data-source="deals"></div>
+      </div>
+    </div>
+    <div class="mna-pane" id="quarterly-coverage">
+      <div class="mna-ph"><h2>Quarterly value · tracker vs Grant Thornton</h2><span class="note">USD B · all India M&amp;A (GT) vs deals tracked here</span></div>
+      <div class="mna-body">
+        <div class="mna-chart" id="quarter-chart" data-source="quarterly" style="min-height:260px"></div>
+        <div class="mna-foot2">Grant Thornton Bharat Dealtracker, M&amp;A only. Q4-25 is derived from the full-year total. Tracked deals are bucketed by announcement date (closing date where there isn't one). Definitions differ, for example GT counts some minority stakes as PE.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mna-row2">
+    <div class="mna-pane" id="leaderboard">
+      <div class="mna-ph"><h2>Acquirer leaderboard</h2><span class="note">By business group · click to filter</span></div>
+      <div class="mna-body mna-ltw">
+        <table class="mna-ltbl" id="leaders" data-source="leaders" data-row-key="group">
+          <thead><tr><th data-field="group">Group</th><th class="r" data-field="deals">Deals</th><th class="r" data-field="value_cr">₹ Cr disclosed</th><th class="r" data-field="avg_cr">Avg ticket</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mna-pane" id="sector-analytics">
+      <div class="mna-ph"><h2>Valuation premium map <span class="tagm">MODELED</span></h2><span class="note">Implied value (log) vs EV/EBITDA</span></div>
+      <div class="mna-body">
+        <div class="mna-chart" id="scatter" data-source="economics deals"></div>
+        <span class="lbl" style="display:block;margin:8px 0 6px">BFSI · priced on book (P/BV)</span>
+        <div class="mna-banks" id="banks"></div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+
+
+
+
+
+
+
+  <footer class="mna-foot" id="method">
+    <b>Coverage.</b> Deals announced or closed from 1-Jan-25 to 17-Oct-26 where the acquirer is a listed company (Indian or foreign) and the target is Indian, or an Indian acquirer is buying abroad. Includes control deals, significant minority stakes, mergers, carve-outs and IBC resolutions. Excludes deals led by unlisted buyers (for example JSW Paints–Akzo, Manipal–Sahyadri, Temasek–Haldiram's) and intra-group restructurings. Smaller 2026 deals come from monthly trackers and are not exhaustive. <b>Values</b> are as reported. Where only USD was reported, ₹ is converted at ~₹86/$ (2025) or ~₹95/$ (2026). A ~ means the date is month-level. <b>Statuses</b> reflect the latest public update found; "completion not verified" means no closing announcement was found. <b>MODELED</b> fields (multiples, EPS, IRR, synergies, bridges, risk scores) are Claude's estimates for eight flagship deals, not company guidance. <b>Company financials</b> are from the latest reported results, cited on each card. <b>Capital providers</b> (underwriters, lenders, co-investors, sellers, advisors) are as publicly reported. <b>Market data</b> (offer spreads, share-price reactions, rates) is a mid-Oct-26 snapshot from public quotes and press, not a live feed. Market totals come from the Grant Thornton Bharat Dealtracker.
+  </footer>
+</div>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  const root = $('#mna');
+  const SECTOR_COLORS = {
+    'Pharma': '#34D399', 'BFSI': '#38BDF8', 'IT services': '#A78BFA', 'Autos': '#F5A524', 'Power & renewables': '#FACC15',
+    'Consumer': '#F472B6', 'Healthcare': '#2DD4BF', 'Metals & mining': '#FB923C', 'Real estate': '#C084FC', 'Industrials': '#94A3B8',
+    'Logistics': '#60A5FA', 'Defence': '#EF4444', 'Electronics': '#22D3EE', 'Agrochem': '#84CC16', 'Infrastructure': '#E879F9',
+    'Cement': '#D6D3D1', 'Consumer internet': '#FDA4AF',
+  };
+  const sc = (s) => SECTOR_COLORS[s] || '#94A3B8';
+  const PHASE_ORDER = { Pending: 0, Completed: 1 };
+  const TABS = ['overview', 'companies', 'capital', 'valuation', 'regulatory'];
+  const GROUPS = [['phase', '#f-phase'], ['geography', '#f-geography'], ['form', '#f-form'], ['year', '#f-year'], ['sector', '#f-sector']];
+  const st = { sel: null, pin: null, page: 'terminal', tab: 'overview', q: '', f: Object.fromEntries(GROUPS.map(([k]) => [k, new Set()])), sort: { k: 'value_inr_cr', dir: -1 } };
+
+  const inr = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+  const isNum = (v) => v !== null && v !== undefined && v !== '' && !isNaN(+v);
+  const mon = d3.utcFormat('%b-%y'), day = d3.utcFormat('%d-%b-%y');
+  const F = {
+    raw: (v) => (v === null || v === undefined || v === '') ? '—' : String(v),
+    cr: (v) => isNum(v) ? inr.format(+v) : '—',
+    crU: (v) => isNum(v) ? '₹' + inr.format(+v) + ' Cr' : '—',
+    crS: (v) => isNum(v) ? ((+v) > 0 ? '+' : '') + inr.format(+v) : 'n/a',
+    n1: (v) => isNum(v) ? (+v).toFixed(1) : '—',
+    x: (v) => isNum(v) ? (+v).toFixed(1) + 'x' : 'n/m',
+    pct: (v) => isNum(v) ? (+v).toFixed(2).replace(/0$/, '') + '%' : 'n/m',
+    pct1: (v) => isNum(v) ? (+v).toFixed(1) + '%' : '—',
+    pctS: (v) => isNum(v) ? (+v) + '%' : 'n/d',
+    spct: (v) => isNum(v) ? ((+v) > 0 ? '+' : '') + (+v).toFixed(1) + '%' : 'n/a',
+    bp: (v) => isNum(v) ? ((+v) > 0 ? '+' : '') + Math.round(+v) + 'bp' : 'n/a',
+    date: (s) => s ? day(new Date(s)) : '—',
+  };
+  const dealDate = (d) => d.announced || d.closed;
+  const fmtDealDate = (d, field) => {
+    const s = d[field];
+    if (!s) return '—';
+    return d.date_approx && field === 'announced' ? '~' + mon(new Date(s)) : day(new Date(s));
+  };
+  const NA_TEXT = { financing: 'Not disclosed / not compiled', advisors: 'Not disclosed / not compiled', approvals: 'Customary approvals (not detailed)', consideration: 'Not disclosed', rationale: '—', source: '—' };
+
+  /* ---------- calculations ---------- */
+  dash.calc('kpis', {
+    title: 'Pipeline headline figures',
+    description: 'Disclosed value sums tracked deals with a reported value; pending sums deals not yet closed; flow shares use disclosed value; EV/EBITDA weighted by implied value across modeled non-financial deals.',
+    inputs: ['deals', 'economics'],
+    fn: (deals, economics) => {
+      const sum = (rows, f) => rows.reduce((s, r) => s + (Number(f(r)) || 0), 0);
+      const disc = deals.filter((d) => d.value_inr_cr != null);
+      const total = sum(disc, (d) => d.value_inr_cr);
+      const pend = deals.filter((d) => d.phase === 'Pending');
+      const flow = (g) => Math.round(sum(disc.filter((d) => d.geography === g), (d) => d.value_inr_cr) / total * 1000) / 10;
+      const ev = economics.filter((e) => e.ev_ebitda != null);
+      const w = sum(ev, (e) => e.implied_value_cr * e.ev_ebitda) / sum(ev, (e) => e.implied_value_cr);
+      return [{
+        deals: deals.length, disclosed: disc.length,
+        disclosed_value_cr: total,
+        disclosed_value_usd_b: Math.round(sum(disc, (d) => d.value_usd_m) / 100) / 10,
+        pending_count: pend.length,
+        pending_value_cr: sum(pend, (d) => d.value_inr_cr),
+        outbound_share: flow('Outbound'), inbound_share: flow('Inbound'),
+        wavg_ev_ebitda: Math.round(w * 10) / 10, modeled_n: ev.length,
+      }];
+    },
+  });
+  dash.calc('by_sector', {
+    title: 'Value by sector',
+    description: 'Disclosed deal value and deal count per sector, largest first.',
+    inputs: ['deals'],
+    fn: (deals) => {
+      const m = new Map();
+      deals.forEach((d) => { const r = m.get(d.sector) || { sector: d.sector, value_cr: 0, count: 0 }; r.value_cr += Number(d.value_inr_cr) || 0; r.count += 1; m.set(d.sector, r); });
+      return Array.from(m.values()).sort((a, b) => b.value_cr - a.value_cr);
+    },
+  });
+  dash.calc('sector_flow', {
+    title: 'Sector × flow',
+    description: 'Disclosed value and deal count for each sector and flow (domestic, inbound, outbound).',
+    inputs: ['deals'],
+    fn: (deals) => {
+      const m = new Map();
+      deals.forEach((d) => { const k = d.sector + '|' + d.geography; const r = m.get(k) || { key: k, sector: d.sector, geography: d.geography, value_cr: 0, count: 0 }; r.value_cr += Number(d.value_inr_cr) || 0; r.count += 1; m.set(k, r); });
+      return Array.from(m.values());
+    },
+  });
+  dash.calc('corridors', {
+    title: 'Cross-border corridors',
+    description: 'Inbound deals grouped by buyer country and outbound deals by target country: disclosed value and count.',
+    inputs: ['deals'],
+    fn: (deals) => {
+      const m = new Map();
+      deals.filter((d) => d.geography === 'Inbound' || d.geography === 'Outbound').forEach((d) => {
+        const country = d.geography === 'Inbound' ? d.acquirer_country : d.target_country;
+        const k = d.geography + '|' + country;
+        const r = m.get(k) || { key: k, direction: d.geography, country, value_cr: 0, count: 0 };
+        r.value_cr += Number(d.value_inr_cr) || 0; r.count += 1; m.set(k, r);
+      });
+      return Array.from(m.values()).sort((a, b) => b.value_cr - a.value_cr || b.count - a.count);
+    },
+  });
+  dash.calc('leaders', {
+    title: 'Acquirer leaderboard',
+    description: 'Deals per business group: count, disclosed value and average disclosed ticket.',
+    inputs: ['deals'],
+    fn: (deals) => {
+      const m = new Map();
+      deals.forEach((d) => {
+        const r = m.get(d.acquirer_group) || { group: d.acquirer_group, deals: 0, value_cr: 0, disclosed: 0 };
+        r.deals += 1;
+        if (d.value_inr_cr != null) { r.value_cr += Number(d.value_inr_cr); r.disclosed += 1; }
+        m.set(d.acquirer_group, r);
+      });
+      return Array.from(m.values()).map((r) => ({ group: r.group, deals: r.deals, value_cr: r.value_cr, avg_cr: r.disclosed ? Math.round(r.value_cr / r.disclosed) : null }))
+        .sort((a, b) => b.deals - a.deals || b.value_cr - a.value_cr);
+    },
+  });
+  dash.calc('quarterly', {
+    title: 'Tracker vs Grant Thornton by quarter',
+    description: 'Tracked deal value (USD B) and count per quarter of announcement (or close), next to Grant Thornton M&A totals; coverage is tracked over GT value.',
+    inputs: ['deals', 'market_quarters'],
+    fn: (deals, market_quarters) => market_quarters.map((q) => {
+      const ds = deals.filter((d) => { const s = d.announced || d.closed; return s && (s.slice(0, 4) + '-Q' + Math.ceil(Number(s.slice(5, 7)) / 3)) === q.quarter; });
+      const usd = ds.reduce((a, d) => a + (Number(d.value_usd_m) || 0), 0) / 1000;
+      return { quarter: q.quarter, gt_value_usd_b: Number(q.gt_value_usd_b), gt_deals: Number(q.gt_deals), tracked_usd_b: Math.round(usd * 10) / 10, tracked_deals: ds.length, coverage_pct: Math.round(usd / Number(q.gt_value_usd_b) * 100), derived: q.derived };
+    }),
+  });
+  dash.calc('queue', {
+    title: 'Regulatory queue',
+    description: 'Pending deals per gating approval body: count and disclosed value.',
+    inputs: ['approval_queue', 'deals'],
+    fn: (approval_queue, deals) => {
+      const m = new Map();
+      approval_queue.forEach((a) => {
+        const d = deals.find((x) => x.id === a.id) || {};
+        const r = m.get(a.body) || { body: a.body, count: 0, value_cr: 0 };
+        r.count += 1; r.value_cr += Number(d.value_inr_cr) || 0; m.set(a.body, r);
+      });
+      return Array.from(m.values());
+    },
+  });
+  dash.calc('spreads', {
+    title: 'Offer spreads',
+    description: 'Gross spread = offer / last price − 1; annualised over the days from the price date to the expected payout.',
+    inputs: ['offer_spreads'],
+    fn: (offer_spreads) => offer_spreads.map((o) => {
+      const days = Math.round((Date.parse(o.expected_payout) - Date.parse(o.price_date)) / 86400000);
+      const g = (Number(o.offer_price) / Number(o.price) - 1) * 100;
+      return { id: o.id, security: o.security, currency: o.currency, offer_price: Number(o.offer_price), price: Number(o.price), price_date: o.price_date, expected_payout: o.expected_payout, payout_approx: o.payout_approx, note: o.note, days, gross_pct: Math.round(g * 100) / 100, annualized_pct: Math.round(g * 365 / days * 10) / 10 };
+    }),
+  });
+  dash.calc('sector_stats', {
+    title: 'Sector scorecard',
+    description: 'Per sector: deal count, disclosed value and share of total, average disclosed ticket, pending value and share, cross-border share of value, largest deal, and value by announcement year (Dec-24 counted in 2025).',
+    inputs: ['deals'],
+    fn: (deals) => {
+      const total = deals.reduce((a, d) => a + (Number(d.value_inr_cr) || 0), 0);
+      const m = new Map();
+      deals.forEach((d) => {
+        const r = m.get(d.sector) || { sector: d.sector, deals: 0, value_cr: 0, disclosed: 0, pending_value_cr: 0, cross_cr: 0, value_2025: 0, value_2026: 0, count_2025: 0, count_2026: 0, top: null };
+        const v = Number(d.value_inr_cr) || 0;
+        const yr = String(d.announced || d.closed || '').slice(0, 4) === '2026' ? '2026' : '2025';
+        r.deals += 1; r.value_cr += v; if (d.value_inr_cr != null) r.disclosed += 1;
+        if (d.phase === 'Pending') r.pending_value_cr += v;
+        if (d.geography !== 'Domestic') r.cross_cr += v;
+        r['value_' + yr] += v; r['count_' + yr] += 1;
+        if (!r.top || v > r.top.v) r.top = { v, name: d.acquirer_group + ' → ' + d.short };
+        m.set(d.sector, r);
+      });
+      return Array.from(m.values()).map((r) => ({
+        sector: r.sector, deals: r.deals, value_cr: r.value_cr,
+        share_pct: total ? Math.round(r.value_cr / total * 1000) / 10 : 0,
+        avg_cr: r.disclosed ? Math.round(r.value_cr / r.disclosed) : null,
+        pending_value_cr: r.pending_value_cr,
+        pending_share_pct: r.value_cr ? Math.round(r.pending_value_cr / r.value_cr * 100) : 0,
+        cross_border_pct: r.value_cr ? Math.round(r.cross_cr / r.value_cr * 100) : 0,
+        largest: r.top && r.top.v ? r.top.name : null, largest_cr: r.top ? r.top.v : null,
+        value_2025: r.value_2025, value_2026: r.value_2026, count_2025: r.count_2025, count_2026: r.count_2026,
+      })).sort((a, b) => b.value_cr - a.value_cr);
+    },
+  });
+  dash.calc('rates', {
+    title: 'Rate spreads',
+    description: 'India 10Y minus repo, and India 10Y minus US 10Y, in basis points.',
+    inputs: ['macro'],
+    fn: (macro) => {
+      const v = (k) => Number((macro.find((m) => m.metric === k) || {}).value);
+      return [{ term_spread_bp: Math.round((v('india_10y') - v('repo')) * 100), india_us_bp: Math.round((v('india_10y') - v('us_10y')) * 100) }];
+    },
+  });
+  dash.calc('deal_calcs', {
+    title: 'Per-deal value creation',
+    description: 'For modeled deals: post-synergy value minus consideration, and ROIC minus WACC.',
+    inputs: ['bridge', 'economics'],
+    fn: (bridge, economics) => economics.map((e) => {
+      const tot = bridge.find((b) => b.id === e.id && b.kind === 'total');
+      const price = e.price_paid_cr == null ? null : Number(e.price_paid_cr);
+      const post = tot ? Number(tot.value) : null;
+      const has = price != null && post != null;
+      return {
+        id: e.id,
+        created_cr: has ? post - price : null,
+        created_pct: has ? Math.round((post / price - 1) * 1000) / 10 : null,
+        roic_spread_bp: e.roic_y3 == null ? null : Math.round((Number(e.roic_y3) - Number(e.wacc)) * 100),
+      };
+    }),
+  });
+
+  /* ---------- helpers ---------- */
+  const failLine = (el) => { const d = document.createElement('div'); d.className = 'fail'; d.textContent = 'Failed to load'; el.replaceChildren(d); };
+  const rowsOf = (id) => { const r = dash.data(id); return r.status === 'ok' ? (r.data || []) : []; };
+  const bad = (id) => ['error', 'connect'].includes(dash.data(id).status);
+
+  function fillStatic(src, rows) {
+    $$(`[data-source="${src}"][data-field]`, root).forEach((el) => {
+      if (el.closest('#deal-terminal') || el.closest('#pipeline-table') || el.closest('#banks') || el.closest('#queue')) return;
+      const status = dash.data(src).status;
+      let row = rows[0];
+      const w = el.dataset.where;
+      if (w) { const [k, v] = w.split('='); row = rows.find((r) => String(r[k]) === v); }
+      el.classList.toggle('dash-skeleton', status === 'loading');
+      if (status !== 'ok' || !row) { el.textContent = '—'; return; }
+      el.textContent = (F[el.dataset.fmt] || F.raw)(row[el.dataset.field]);
+    });
+  }
+
+  const pinMatch = (d) => {
+    const p = st.pin;
+    if (!p) return true;
+    if (p.type === 'group') return d.acquirer_group === p.value;
+    return d.geography === p.dir && (p.dir === 'Inbound' ? d.acquirer_country : d.target_country) === p.value;
+  };
+  function filtered(deals) {
+    const q = st.q.trim().toLowerCase();
+    return deals.filter((d) => GROUPS.every(([k]) => !st.f[k].size || st.f[k].has(String(d[k]))) && pinMatch(d) &&
+      (!q || (d.target + ' ' + d.acquirer + ' ' + d.short + ' ' + d.acquirer_group).toLowerCase().includes(q)));
+  }
+  const setPin = (p) => { st.pin = st.pin && p && st.pin.type === p.type && st.pin.value === p.value && st.pin.dir === p.dir ? null : p; draw(); };
+  $('#pin').addEventListener('click', () => { st.pin = null; draw(); });
+  const selectDeal = (id) => { st.sel = id; const sw = st.page !== 'terminal'; st.page = 'terminal'; if (sw) dash.setLink('page-terminal'); draw(); const t = $('#deal-terminal'); if (t && t.scrollIntoView) t.scrollIntoView({ block: sw ? 'start' : 'nearest', behavior: 'smooth' }); };
+  const biggest = (rows) => rows.slice().sort((a, b) => (b.value_inr_cr || 0) - (a.value_inr_cr || 0))[0];
+
+  /* ---------- command bar ---------- */
+  function renderChips(deals) {
+    GROUPS.forEach(([key, sel]) => {
+      const box = $(sel);
+      let vals = Array.from(new Set(deals.map((d) => String(d[key])).filter((v) => v && v !== 'null')));
+      if (key === 'phase') vals.sort((a, b) => (PHASE_ORDER[a] ?? 9) - (PHASE_ORDER[b] ?? 9));
+      else if (key === 'year') vals.sort().reverse();
+      else vals.sort();
+      const label = box.querySelector('.lbl');
+      box.replaceChildren(label, ...vals.map((v) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'mna-chip'; b.textContent = v;
+        b.dataset.key = key; b.dataset.val = v;
+        b.setAttribute('aria-pressed', st.f[key].has(v) ? 'true' : 'false');
+        return b;
+      }));
+    });
+  }
+  $('#command-bar').addEventListener('click', (ev) => {
+    const chip = ev.target.closest('.mna-chip');
+    if (chip) { const set = st.f[chip.dataset.key]; set.has(chip.dataset.val) ? set.delete(chip.dataset.val) : set.add(chip.dataset.val); draw(); }
+  });
+  $('#clear').addEventListener('click', () => { Object.values(st.f).forEach((s) => s.clear()); st.q = ''; st.pin = null; $('#q').value = ''; draw(); });
+  $('#q').addEventListener('input', (ev) => { st.q = ev.target.value; draw(); });
+
+  /* ---------- pipeline table ---------- */
+  $('#pipeline-table thead').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-k]');
+    if (!b) return;
+    const k = b.dataset.k;
+    st.sort = st.sort.k === k ? { k, dir: -st.sort.dir } : { k, dir: (k === 'value_inr_cr' || k === 'announced') ? -1 : 1 };
+    draw();
+  });
+  $('#pl-body').addEventListener('click', (ev) => { const tr = ev.target.closest('tr[data-key]'); if (tr) { st.sel = tr.dataset.key; draw(); } });
+
+  function renderTable(list) {
+    const body = $('#pl-body');
+    if (bad('deals')) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 5; failLine(td); tr.append(td); body.replaceChildren(tr); return; }
+    if (dash.data('deals').status !== 'ok') return;
+    const { k, dir } = st.sort;
+    const val = (d) => k === 'phase' ? (PHASE_ORDER[d.phase] ?? 9) : k === 'announced' ? dealDate(d) : d[k];
+    const rows = list.slice().sort((a, b) => {
+      const va = val(a), vb = val(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb))) * dir;
+    });
+    $$('#pipeline-table th').forEach((th) => {
+      const kk = th.querySelector('button').dataset.k;
+      if (kk === k) th.setAttribute('aria-sort', dir > 0 ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort');
+    });
+    if (!rows.length) {
+      const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 5;
+      td.textContent = 'No deals match the current filters.'; td.style.color = '#64748B'; tr.append(td); body.replaceChildren(tr); return;
+    }
+    body.replaceChildren(...rows.map((d) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = d.id;
+      tr.style.setProperty('--sc', sc(d.sector));
+      if (d.id === st.sel) tr.classList.add('sel');
+      if (d.phase === 'Pending') tr.classList.add('pend');
+      [[d.short, ''], [d.acquirer, 'acq'], [F.cr(d.value_inr_cr), 'mono r'], [d.announced ? fmtDealDate(d, 'announced') : fmtDealDate(d, 'closed'), 'dt'], [d.status, 'st']].forEach(([t, cls]) => {
+        const td = document.createElement('td'); td.textContent = t; if (cls) td.className = cls; tr.append(td);
+      });
+      return tr;
+    }));
+  }
+
+  /* ---------- deal terminal ---------- */
+  $('.mna-tabs').addEventListener('click', (ev) => {
+    const b = ev.target.closest('.mna-tab');
+    if (!b) return;
+    st.tab = b.dataset.tab; dash.setLink('tab-' + st.tab); draw();
+  });
+  $('#val-flagships').addEventListener('click', (ev) => { const c = ev.target.closest('.mna-chip'); if (c) { st.sel = c.dataset.id; draw(); } });
+
+  function bindEl(el, src, field, id, text) {
+    if (src && id) { el.dataset.source = src; el.dataset.field = field; el.dataset.where = 'id=' + id; }
+    else { delete el.dataset.source; delete el.dataset.field; delete el.dataset.where; }
+    el.textContent = text;
+  }
+
+  function renderDetail(deals, eco, calcs, bridge, steps) {
+    const id = st.sel;
+    const d = deals.find((x) => x.id === id);
+    const e = eco.find((x) => x.id === id);
+    const c = calcs.find((x) => x.id === id);
+    const term = $('#deal-terminal');
+    const isBank = e && e.multiple_metric === 'P/BV';
+
+    $('#m-mult').dataset.f = isBank ? 'pbv' : 'ev_ebitda';
+    $('#m-mult-l').textContent = isBank ? 'P/BV' : 'EV/EBITDA';
+    $('#m-lev-l').textContent = isBank ? 'PF capital' : 'PF ND/EBITDA';
+    $('#roic-l').textContent = isBank ? 'RoE (Y3)' : 'ROIC (Y3)';
+    $('#wacc-l').textContent = isBank ? 'Cost of equity' : 'WACC';
+
+    const pick = { deals: d, economics: e, deal_calcs: c };
+    $$('[data-s][data-f]', term).forEach((el) => {
+      const src = el.dataset.s, field = el.dataset.f, row = pick[src];
+      el.classList.remove('neg', 'pos', 'na');
+      if (!row || dash.data(src).status !== 'ok') {
+        bindEl(el, null, null, null, src === 'deals' ? '—' : 'n/a');
+        if (src !== 'deals') el.classList.add('na');
+        return;
+      }
+      const v = row[field];
+      const hasVal = !(v === null || v === undefined || v === '');
+      let txt;
+      if (field === 'lev_value') txt = isNum(v) ? (+v).toFixed(1) + (e.lev_unit === '%' ? '%' : 'x') : 'n/m';
+      else if (src === 'deals' && (field === 'announced' || field === 'closed')) txt = fmtDealDate(row, field);
+      else if (src === 'deals' && field === 'bottleneck' && !hasVal) txt = row.phase === 'Completed' ? 'None outstanding — ' + row.status : (row.approvals || row.status);
+      else if (src === 'deals' && !hasVal && field in NA_TEXT) txt = NA_TEXT[field];
+      else txt = (F[el.dataset.fmt] || F.raw)(v);
+      bindEl(el, hasVal ? src : null, field, id, txt);
+      if (!hasVal && src !== 'deals') el.classList.add('na');
+      if (el.dataset.sign && isNum(v) && +v !== 0) el.classList.add(+v < 0 ? 'neg' : 'pos');
+    });
+    $('#d-status').classList.toggle('active', !!d && d.phase === 'Pending');
+    $('#tax-block').hidden = !(d && d.tax_structuring);
+
+    [['#eps1-bar', 'eps_y1'], ['#eps2-bar', 'eps_y2']].forEach(([sel, f]) => {
+      const bar = $(sel).querySelector('span');
+      const v = e ? e[f] : null;
+      if (!isNum(v)) { bar.style.width = '0'; return; }
+      const w = Math.min(Math.abs(+v) / 10, 1) * 50;
+      bar.style.width = w + '%'; bar.style.left = (+v >= 0 ? 50 : 50 - w) + '%';
+      bar.style.background = +v >= 0 ? '#34D399' : '#F87171';
+    });
+
+    $$('.mna-tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.tab === st.tab ? 'true' : 'false'));
+    TABS.forEach((t) => { $('#panel-' + t).hidden = t !== st.tab; });
+    if (st.tab === 'companies') renderCompanies(rowsOf('companies'), id);
+    if (st.tab === 'capital') renderParties(rowsOf('parties'), id);
+
+    if (st.tab === 'valuation') {
+      const rows = bridge.filter((b) => b.id === id).sort((a, b) => a.seq - b.seq);
+      const has = rows.length > 0;
+      $('#val-empty').hidden = has; $('#val-body').hidden = !has;
+      if (has) drawBridge(rows, e);
+      else {
+        $('#val-flagships').replaceChildren(...eco.map((x) => {
+          const dd = deals.find((y) => y.id === x.id); const b = document.createElement('button');
+          b.type = 'button'; b.className = 'mna-chip'; b.dataset.id = x.id; b.textContent = dd ? dd.short : x.id; return b;
+        }));
+      }
+    }
+    if (st.tab === 'regulatory') {
+      const real = steps.filter((s) => s.id === id).sort((a, b) => a.seq - b.seq);
+      const ol = $('#steps');
+      if (real.length) {
+        ol.dataset.source = 'reg_steps';
+        $('#steps-l').textContent = 'Approval tracker · ' + real.filter((s) => s.status === 'done').length + ' of ' + real.length + ' milestones complete';
+        renderSteps(real);
+      } else if (d) {
+        ol.dataset.source = 'deals';
+        $('#steps-l').textContent = 'Deal timeline (from public status)';
+        renderSteps([
+          { step: 'Deal announced', status: 'done', date: d.announced, approx: d.date_approx, note: d.consideration || '' },
+          { step: 'Regulatory & shareholder approvals', status: d.phase === 'Completed' ? 'done' : 'active', date: null, note: d.approvals || 'Customary approvals (not detailed)' },
+          { step: 'Completion', status: d.phase === 'Completed' ? 'done' : 'pending', date: d.closed, note: d.status },
+        ]);
+      }
+      $('#risk-block').hidden = !e;
+      [['#exec-meter', 'exec_risk'], ['#reg-meter', 'reg_risk']].forEach(([sel, f]) => {
+        const m = $(sel); const n = e ? +e[f] : 0;
+        m.classList.toggle('hi', n >= 4);
+        m.replaceChildren(...[1, 2, 3, 4, 5].map((i) => { const x = document.createElement('i'); if (i <= n) x.className = 'on'; return x; }));
+      });
+    }
+  }
+
+  function renderSteps(rows) {
+    const ol = $('#steps');
+    if (ol.dataset.source === 'reg_steps' && bad('reg_steps')) { failLine(ol); return; }
+    ol.replaceChildren(...rows.map((s) => {
+      const li = document.createElement('li'); li.className = 'mna-step ' + s.status;
+      const dot = document.createElement('span'); dot.className = 'mna-dot';
+      const t = document.createElement('span'); t.className = 't'; t.textContent = s.step;
+      const dd = document.createElement('span'); dd.className = 'd';
+      dd.textContent = s.date ? (s.approx ? '~' + mon(new Date(s.date)) : F.date(s.date)) : (s.status === 'done' ? 'done' : s.status === 'active' ? 'in progress' : 'TBD');
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = s.note || '';
+      li.append(dot, t, dd, n); return li;
+    }));
+  }
+
+  /* ---------- tooltips ---------- */
+  function tipBox(box) { let tip = box.querySelector('.mna-tip'); if (!tip) { tip = document.createElement('div'); tip.className = 'mna-tip'; box.append(tip); } return tip; }
+  function showTip(box, tip, ev, head, lines) {
+    tip.replaceChildren();
+    const h = document.createElement('div'); h.className = 'h'; h.textContent = head; tip.append(h);
+    [].concat(lines).forEach((l) => { const n = document.createElement('div'); n.className = 'n'; n.textContent = l; tip.append(n); });
+    tip.style.display = 'block';
+    const r = box.getBoundingClientRect();
+    let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    if (x + tw > r.width) x = ev.clientX - r.left - tw - 12;
+    if (y + th > r.height) y = ev.clientY - r.top - th - 12;
+    tip.style.left = Math.max(0, x) + 'px'; tip.style.top = Math.max(0, y) + 'px';
+  }
+  const clearSvg = (box) => box.querySelectorAll('svg, .fail').forEach((s) => s.remove());
+
+  /* ---------- value bridge ---------- */
+  function drawBridge(rows, e) {
+    const box = $('#bridge-chart'), note = $('#bridge-note');
+    if (bad('bridge')) { failLine(box); note.textContent = ''; return; }
+    clearSvg(box);
+    if (!rows.length) return;
+    const W = Math.max(box.clientWidth, 300), H = 270;
+    const price = e && isNum(e.price_paid_cr) ? +e.price_paid_cr : null;
+    let cum = 0;
+    const bars = rows.map((r) => {
+      const v = +r.value; let a, b;
+      if (r.kind === 'base' || r.kind === 'total') { a = 0; b = v; cum = v; } else { a = cum; b = cum + v; cum = b; }
+      return { ...r, v, lo: Math.min(a, b), hi: Math.max(a, b) };
+    });
+    const top = d3.max([...bars.map((b) => b.hi), price || 0]);
+    const anchors = bars.map((b) => (b.kind === 'base' || b.kind === 'total') ? b.v : b.lo).concat(price ? [price] : []);
+    const minAnchor = d3.min(anchors);
+    const floor = minAnchor > top * 0.35 ? Math.floor((minAnchor * 0.8) / 1000) * 1000 : 0;
+    const y = d3.scaleLinear([floor, top * 1.1], [H - 30, 18]).nice(5);
+    const fmtK = (v) => inr.format(v / 1000) + 'k';
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const probe = svg.append('text').attr('font-size', 10).text(fmtK(y.domain()[1]));
+    const ml = probe.node().getComputedTextLength() + 12; probe.remove();
+    const x = d3.scaleBand(bars.map((b) => b.key), [ml, W - 8]).padding(0.3);
+    const g = svg.append('g');
+    g.selectAll('line.grid').data(y.ticks(5)).join('line').attr('x1', ml).attr('x2', W - 8).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).attr('stroke', '#1F2A3B');
+    g.selectAll('text.tick').data(y.ticks(5)).join('text').attr('x', ml - 6).attr('y', (t) => y(t) + 3).attr('text-anchor', 'end').attr('font-size', 10).attr('fill', '#64748B').text(fmtK);
+    const col = (b) => b.kind === 'up' ? '#34D399' : b.kind === 'down' ? '#F87171' : b.kind === 'total' ? '#F5A524' : '#475569';
+    const cy = (v) => y(Math.max(v, y.domain()[0]));
+    bars.forEach((b, i) => {
+      if (i === bars.length - 1) return;
+      const level = b.kind === 'down' ? b.lo : b.hi;
+      g.append('line').attr('x1', x(b.key) + x.bandwidth()).attr('x2', x(bars[i + 1].key)).attr('y1', cy(level)).attr('y2', cy(level)).attr('stroke', '#334155').attr('stroke-dasharray', '2 2');
+    });
+    const tip = tipBox(box);
+    g.selectAll('rect.bar').data(bars).join('rect')
+      .attr('x', (b) => x(b.key)).attr('width', x.bandwidth())
+      .attr('y', (b) => cy(b.hi)).attr('height', (b) => Math.max(1, cy(b.lo) - cy(b.hi)))
+      .attr('fill', col).attr('rx', 2)
+      .on('mousemove', (ev, b) => showTip(box, tip, ev, b.desc, (b.kind === 'up' ? '+' : '') + '₹' + inr.format(b.v) + ' Cr'))
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+    g.selectAll('text.val').data(bars).join('text')
+      .attr('x', (b) => x(b.key) + x.bandwidth() / 2).attr('y', (b) => cy(b.hi) - 5)
+      .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#E2E8F0').text((b) => (b.kind === 'up' ? '+' : '') + inr.format(b.v));
+    const lblSize = x.bandwidth() < 54 ? 9 : 10;
+    g.selectAll('text.xl').data(bars).join('text')
+      .attr('x', (b) => x(b.key) + x.bandwidth() / 2).attr('y', H - 14)
+      .attr('text-anchor', 'middle').attr('font-size', lblSize).attr('fill', '#94A3B8').text((b) => b.label);
+    if (price) {
+      g.append('line').attr('x1', ml).attr('x2', W - 8).attr('y1', y(price)).attr('y2', y(price)).attr('stroke', '#38BDF8').attr('stroke-dasharray', '5 4');
+      g.append('text').attr('x', ml + 4).attr('y', y(price) - 5).attr('font-size', 10).attr('fill', '#38BDF8').text('Consideration ₹' + inr.format(price) + ' Cr');
+    }
+    note.textContent = (y.domain()[0] > 0 ? 'Axis starts at ₹' + inr.format(y.domain()[0]) + ' Cr so increments stay legible. ' : '') + 'Dashed line: consideration paid. Modeled estimates.';
+  }
+
+  /* ---------- deal-flow timeline ---------- */
+  function drawTimeline(deals, visible) {
+    const box = $('#timeline');
+    if (bad('deals')) { failLine(box); return; }
+    box.classList.toggle('dash-skeleton', dash.data('deals').status === 'loading');
+    clearSvg(box);
+    const pts = deals.filter((d) => isNum(d.value_inr_cr) && dealDate(d)).map((d) => ({ ...d, t: new Date(dealDate(d)), v: +d.value_inr_cr }));
+    if (!pts.length) return;
+    const W = Math.max(box.clientWidth, 300), H = 320;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const probe = svg.append('text').attr('font-size', 10).text('₹1,00,000');
+    const ml = probe.node().getComputedTextLength() + 12; probe.remove();
+    const x = d3.scaleUtc([d3.min(pts, (p) => p.t), new Date('2026-10-31')], [ml + 10, W - 18]);
+    const y = d3.scaleLog([Math.min(100, d3.min(pts, (p) => p.v)), d3.max(pts, (p) => p.v) * 1.6], [H - 30, 16]);
+    const r = d3.scaleSqrt([0, d3.max(pts, (p) => p.v)], [3, 16]);
+    const yt = [100, 1000, 10000, 100000].filter((t) => t >= y.domain()[0] && t <= y.domain()[1]);
+    const nT = W < 520 ? 4 : 8;
+    const g = svg.append('g');
+    g.selectAll('line.gx').data(x.ticks(nT)).join('line').attr('x1', (t) => x(t)).attr('x2', (t) => x(t)).attr('y1', 14).attr('y2', H - 30).attr('stroke', '#161F2E');
+    g.selectAll('line.gy').data(yt).join('line').attr('x1', ml).attr('x2', W - 16).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).attr('stroke', '#1F2A3B');
+    g.selectAll('text.ty').data(yt).join('text').attr('x', ml - 6).attr('y', (t) => y(t) + 3).attr('text-anchor', 'end').attr('font-size', 10).attr('fill', '#64748B').text((t) => '₹' + inr.format(t));
+    g.selectAll('text.tx').data(x.ticks(nT)).join('text').attr('x', (t) => x(t)).attr('y', H - 12).attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#64748B').text((t) => mon(t));
+    const tip = tipBox(box);
+    const sorted = pts.slice().sort((a, b) => b.v - a.v);
+    g.selectAll('circle.pt').data(sorted).join('circle')
+      .attr('cx', (p) => x(p.t)).attr('cy', (p) => y(p.v)).attr('r', (p) => r(p.v))
+      .attr('fill', (p) => p.phase === 'Pending' ? 'transparent' : sc(p.sector)).attr('fill-opacity', .75)
+      .attr('stroke', (p) => p.id === st.sel ? '#FFFFFF' : sc(p.sector)).attr('stroke-width', (p) => p.id === st.sel ? 2.5 : 1.6)
+      .attr('opacity', (p) => visible.has(p.id) ? 1 : 0.15).style('cursor', 'pointer')
+      .on('click', (ev, p) => { st.sel = p.id; draw(); })
+      .on('mousemove', (ev, p) => showTip(box, tip, ev, p.acquirer + ' → ' + p.target, ['₹' + inr.format(p.v) + ' Cr · ' + p.sector, p.geography + ' · ' + p.form + ' · ' + p.status]))
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+    const placed = [];
+    sorted.filter((p) => visible.has(p.id)).slice(0, 10).forEach((p) => {
+      const px = x(p.t), py = y(p.v) - r(p.v) - 4;
+      const t = g.append('text').attr('font-size', 10).attr('fill', '#CBD5E1').attr('text-anchor', 'middle').attr('y', py).text(p.short).style('pointer-events', 'none');
+      const w = t.node().getComputedTextLength();
+      const lx = Math.min(Math.max(px, ml + w / 2), W - 16 - w / 2);
+      t.attr('x', lx);
+      const bb = { x0: lx - w / 2 - 2, x1: lx + w / 2 + 2, y0: py - 10, y1: py + 2 };
+      if (py < 12 || placed.some((q) => !(bb.x1 < q.x0 || bb.x0 > q.x1 || bb.y1 < q.y0 || bb.y0 > q.y1))) t.remove(); else placed.push(bb);
+    });
+    const sectors = Array.from(new Set(deals.map((d) => d.sector))).sort();
+    const items = sectors.map((s) => { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = sc(s); sp.append(i, document.createTextNode(s)); return sp; });
+    const pend = document.createElement('span'); const pi = document.createElement('i'); pi.className = 'ring'; pend.append(pi, document.createTextNode('Pending')); items.push(pend);
+    $('#legend').replaceChildren(...items);
+  }
+
+  /* ---------- catalyst calendar ---------- */
+  const CUR = { USD: '$', EUR: '€', INR: '₹' };
+  function renderCatalysts(cat, deals) {
+    const row = $('#cat-row');
+    if (bad('catalysts')) { failLine(row); return; }
+    if (dash.data('catalysts').status !== 'ok') return;
+    const now = Date.now();
+    const items = cat.filter((c) => Date.parse(c.date) >= now - 86400000).sort((a, b) => a.date.localeCompare(b.date));
+    if (!items.length) { row.textContent = 'No upcoming catalysts.'; return; }
+    row.replaceChildren(...items.map((c) => {
+      const d = deals.find((x) => x.id === c.id) || {};
+      const card = document.createElement('div'); card.className = 'mna-catcard'; card.dataset.id = c.id;
+      if (Date.parse(c.date) - now < 14 * 86400000) card.classList.add('soon');
+      const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = c.approx ? '~' + mon(new Date(c.date)) : day(new Date(c.date));
+      const w = document.createElement('span'); w.className = 'w'; w.textContent = (d.short || c.id) + ' · ' + (d.acquirer_group || '');
+      const e = document.createElement('span'); e.className = 'e'; e.textContent = c.event;
+      const t = document.createElement('span'); t.className = 't'; t.textContent = c.type;
+      card.append(dt, w, e, t); return card;
+    }));
+  }
+  $('#cat-row').addEventListener('click', (ev) => { const c = ev.target.closest('.mna-catcard'); if (c) selectDeal(c.dataset.id); });
+
+  /* ---------- regulatory queue ---------- */
+  const QORDER = ['CCI', 'RBI', 'IRDAI', 'SEBI / open offer', 'NCLT', 'Foreign antitrust', 'Target shareholders', 'Tender acceptance', 'Closing mechanics', 'Status unverified'];
+  function renderQueue(aq, deals, qrows) {
+    const box = $('#queue');
+    if (bad('approval_queue')) { failLine(box); return; }
+    if (dash.data('approval_queue').status !== 'ok') return;
+    const bodies = Array.from(new Set(aq.map((a) => a.body))).sort((a, b) => (QORDER.indexOf(a) + 99) % 99 - (QORDER.indexOf(b) + 99) % 99);
+    box.replaceChildren(...bodies.map((body) => {
+      const col = document.createElement('div'); col.className = 'mna-qcol';
+      if (body === 'Closing mechanics' || body === 'Status unverified') col.classList.add('muted');
+      const h = document.createElement('h3'); h.append(document.createTextNode(body));
+      const q = qrows.find((r) => r.body === body);
+      const c = document.createElement('span'); c.className = 'c';
+      const n = document.createElement('span'); n.dataset.source = 'queue'; n.dataset.field = 'count'; n.dataset.where = 'body=' + body; n.textContent = q ? q.count : '—';
+      const v = document.createElement('span'); v.dataset.source = 'queue'; v.dataset.field = 'value_cr'; v.dataset.where = 'body=' + body; v.textContent = q && q.value_cr ? '₹' + inr.format(q.value_cr) : '';
+      c.append(n, document.createTextNode(q && q.value_cr ? ' · ' : ''), v); h.append(c);
+      const list = document.createElement('div'); list.className = 'mna-qlist';
+      aq.filter((a) => a.body === body).map((a) => deals.find((x) => x.id === a.id)).filter(Boolean)
+        .sort((a, b) => (b.value_inr_cr || 0) - (a.value_inr_cr || 0)).forEach((d) => {
+          const chip = document.createElement('button'); chip.type = 'button'; chip.className = 'mna-qchip'; chip.dataset.id = d.id;
+          chip.style.setProperty('--sc', sc(d.sector)); if (d.id === st.sel) chip.classList.add('sel');
+          chip.textContent = d.short; list.append(chip);
+        });
+      col.append(h, list); return col;
+    }));
+  }
+  $('#queue').addEventListener('click', (ev) => { const c = ev.target.closest('.mna-qchip'); if (c) selectDeal(c.dataset.id); });
+
+  /* ---------- spreads ---------- */
+  function renderSpreads(rows) {
+    const body = $('#spread-table tbody');
+    if (bad('offer_spreads')) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 6; failLine(td); tr.append(td); body.replaceChildren(tr); return; }
+    body.replaceChildren(...rows.slice().sort((a, b) => b.annualized_pct - a.annualized_pct).map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      const c1 = document.createElement('td'); c1.textContent = r.security;
+      const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = r.note; c1.append(sub);
+      const cells = [CUR[r.currency] + r.offer_price.toFixed(2), CUR[r.currency] + r.price.toFixed(2), r.gross_pct.toFixed(2) + '%', (r.payout_approx ? '~' : '') + r.days, r.annualized_pct.toFixed(1) + '%'];
+      tr.append(c1, ...cells.map((t, i) => { const td = document.createElement('td'); td.className = 'r' + (i === 4 && r.annualized_pct >= 6 ? ' hot' : ''); td.textContent = t; return td; }));
+      return tr;
+    }));
+  }
+  $('#spread-table').addEventListener('click', (ev) => { const tr = ev.target.closest('tr[data-key]'); if (tr) selectDeal(tr.dataset.key); });
+
+  /* ---------- market reaction ---------- */
+  function drawReactions(rows, deals) {
+    const box = $('#reaction-chart');
+    if (bad('reactions')) { failLine(box); return; }
+    clearSvg(box);
+    if (!rows.length) return;
+    const data = rows.slice().sort((a, b) => b.pct - a.pct);
+    const W = Math.max(box.clientWidth, 280), rowH = 26, H = data.length * rowH + 24;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const lbl = (r) => r.company + (r.party === 'Acquirer' ? ' (acq.)' : ' (tgt.)');
+    let ml = 0; data.forEach((r) => { const t = svg.append('text').attr('font-size', 10.5).text(lbl(r)); ml = Math.max(ml, t.node().getComputedTextLength()); t.remove(); });
+    ml += 12;
+    const m = d3.max(data, (r) => Math.abs(r.pct)) * 1.25;
+    const x = d3.scaleLinear([-m, m], [ml, W - 10]);
+    const g = svg.append('g');
+    g.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', 4).attr('y2', H - 18).attr('stroke', '#475569');
+    [-5, 5].filter((t) => Math.abs(t) < m).forEach((t) => {
+      g.append('line').attr('x1', x(t)).attr('x2', x(t)).attr('y1', 4).attr('y2', H - 18).attr('stroke', '#1F2A3B').attr('stroke-dasharray', '2 3');
+      g.append('text').attr('x', x(t)).attr('y', H - 5).attr('text-anchor', 'middle').attr('font-size', 9.5).attr('fill', '#64748B').text((t > 0 ? '+' : '') + t + '%');
+    });
+    const tip = tipBox(box);
+    const rowG = g.selectAll('g.r').data(data).join('g').attr('transform', (r, i) => `translate(0,${i * rowH + 6})`).style('cursor', 'pointer')
+      .on('click', (ev, r) => selectDeal(r.id))
+      .on('mousemove', (ev, r) => { const d = deals.find((x) => x.id === r.id) || {}; showTip(box, tip, ev, (d.acquirer || '') + ' → ' + (d.short || ''), [(r.pct > 0 ? '+' : '') + r.pct.toFixed(1) + '% · ' + F.date(r.date), r.basis]); })
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+    rowG.append('text').attr('x', ml - 8).attr('y', 12).attr('text-anchor', 'end').attr('font-size', 10.5).attr('fill', '#CBD5E1').text(lbl);
+    rowG.append('rect').attr('x', (r) => Math.min(x(0), x(r.pct))).attr('y', 3).attr('height', 13).attr('rx', 2)
+      .attr('width', (r) => Math.max(2, Math.abs(x(r.pct) - x(0)))).attr('fill', (r) => r.pct >= 0 ? '#34D399' : '#F87171').attr('opacity', (r) => r.party === 'Acquirer' ? 0.95 : 0.6);
+    rowG.append('text').attr('y', 13).attr('font-size', 10).attr('fill', '#E2E8F0')
+      .attr('x', (r) => r.pct >= 0 ? x(r.pct) + 4 : x(r.pct) - 4).attr('text-anchor', (r) => r.pct >= 0 ? 'start' : 'end')
+      .text((r) => (r.pct > 0 ? '+' : '') + r.pct.toFixed(1) + '%');
+  }
+
+  /* ---------- quarterly coverage ---------- */
+  function drawQuarters(rows) {
+    const box = $('#quarter-chart');
+    if (bad('market_quarters') || bad('deals')) { failLine(box); return; }
+    clearSvg(box);
+    if (!rows.length) return;
+    const W = Math.max(box.clientWidth, 280), H = 260;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const ymax = d3.max(rows, (r) => Math.max(r.gt_value_usd_b, r.tracked_usd_b)) * 1.18;
+    const y = d3.scaleLinear([0, ymax], [H - 40, 16]).nice(5);
+    const probe = svg.append('text').attr('font-size', 10).text('$' + y.domain()[1] + 'B'); const ml = probe.node().getComputedTextLength() + 12; probe.remove();
+    const x0 = d3.scaleBand(rows.map((r) => r.quarter), [ml, W - 8]).padding(0.25);
+    const x1 = d3.scaleBand(['gt', 'tr'], [0, x0.bandwidth()]).padding(0.12);
+    const g = svg.append('g');
+    g.selectAll('line.gy').data(y.ticks(5)).join('line').attr('x1', ml).attr('x2', W - 8).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).attr('stroke', '#1F2A3B');
+    g.selectAll('text.ty').data(y.ticks(5)).join('text').attr('x', ml - 6).attr('y', (t) => y(t) + 3).attr('text-anchor', 'end').attr('font-size', 10).attr('fill', '#64748B').text((t) => '$' + t + 'B');
+    const tip = tipBox(box);
+    const q = g.selectAll('g.q').data(rows).join('g').attr('transform', (r) => `translate(${x0(r.quarter)},0)`)
+      .on('mousemove', (ev, r) => showTip(box, tip, ev, r.quarter + (r.derived ? ' (GT derived)' : ''), ['GT: $' + r.gt_value_usd_b + 'B · ' + r.gt_deals + ' deals', 'Tracked: $' + r.tracked_usd_b + 'B · ' + r.tracked_deals + ' deals', 'Coverage: ' + r.coverage_pct + '%']))
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+    q.append('rect').attr('x', x1('gt')).attr('width', x1.bandwidth()).attr('y', (r) => y(r.gt_value_usd_b)).attr('height', (r) => y(0) - y(r.gt_value_usd_b)).attr('rx', 2).attr('fill', '#475569').attr('opacity', (r) => r.derived ? 0.55 : 1);
+    q.append('rect').attr('x', x1('tr')).attr('width', x1.bandwidth()).attr('y', (r) => y(r.tracked_usd_b)).attr('height', (r) => y(0) - y(r.tracked_usd_b)).attr('rx', 2).attr('fill', '#F5A524');
+    q.append('text').attr('x', x0.bandwidth() / 2).attr('y', (r) => y(Math.max(r.gt_value_usd_b, r.tracked_usd_b)) - 5).attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#CBD5E1').text((r) => r.coverage_pct + '%');
+    q.append('text').attr('x', x0.bandwidth() / 2).attr('y', H - 24).attr('text-anchor', 'middle').attr('font-size', x0.bandwidth() < 40 ? 8.5 : 10).attr('fill', '#94A3B8').text((r) => r.quarter.replace('20', '').replace('-', ' '));
+    const lg = g.append('g').attr('transform', `translate(${ml},${H - 8})`);
+    [['#475569', 'Grant Thornton (all India M&A)'], ['#F5A524', 'Tracked here'], ['#CBD5E1', '% = coverage']].forEach(([c, t], i) => {
+      const gx = lg.append('g').attr('transform', `translate(${i * Math.min(190, (W - ml) / 3)},0)`);
+      if (i < 2) gx.append('rect').attr('width', 9).attr('height', 9).attr('y', -8).attr('rx', 2).attr('fill', c);
+      gx.append('text').attr('x', i < 2 ? 13 : 0).attr('font-size', 9.5).attr('fill', '#94A3B8').text(t);
+    });
+  }
+
+  /* ---------- sector × flow heatmap ---------- */
+  const FLOWS = ['Domestic', 'Inbound', 'Outbound'];
+  const kfmt = (v) => v >= 1000 ? '₹' + (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'k' : '₹' + inr.format(v);
+  function renderHeat(rows, totals) {
+    const t = $('#heat');
+    if (bad('deals')) { failLine(t); return; }
+    if (!rows.length) return;
+    const max = d3.max(rows, (r) => r.value_cr) || 1;
+    const head = document.createElement('tr');
+    head.append(...['', ...FLOWS, 'Total'].map((h) => { const th = document.createElement('th'); th.textContent = h; return th; }));
+    const sF = st.f.sector, gF = st.f.geography;
+    const body = totals.map((tot) => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th'); th.className = 'rl'; th.textContent = tot.sector; tr.append(th);
+      FLOWS.forEach((f) => {
+        const r = rows.find((x) => x.sector === tot.sector && x.geography === f);
+        const td = document.createElement('td'); td.dataset.sector = tot.sector; td.dataset.flow = f;
+        if (r) {
+          const a = 0.12 + 0.78 * Math.sqrt(r.value_cr / max);
+          td.style.background = r.value_cr ? `rgba(245,165,36,${a.toFixed(2)})` : 'rgba(148,163,184,.12)';
+          td.style.color = a > 0.55 ? '#0B0F17' : '#E2E8F0';
+          td.textContent = r.value_cr ? kfmt(r.value_cr) : 'n/d';
+          const n = document.createElement('span'); n.className = 'n'; n.textContent = r.count + (r.count === 1 ? ' deal' : ' deals'); td.append(n);
+        } else { td.textContent = '·'; td.style.color = '#334155'; }
+        if (sF.size === 1 && sF.has(tot.sector) && gF.size === 1 && gF.has(f)) td.classList.add('on');
+        tr.append(td);
+      });
+      const tt = document.createElement('td'); tt.className = 'tot'; tt.textContent = kfmt(tot.value_cr);
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = tot.count + ' deals'; tt.append(n); tr.append(tt);
+      return tr;
+    });
+    t.replaceChildren(head, ...body);
+  }
+  $('#heat').addEventListener('click', (ev) => {
+    const td = ev.target.closest('td[data-flow]'); if (!td) return;
+    const sF = st.f.sector, gF = st.f.geography;
+    const same = sF.size === 1 && sF.has(td.dataset.sector) && gF.size === 1 && gF.has(td.dataset.flow);
+    sF.clear(); gF.clear();
+    if (!same) { sF.add(td.dataset.sector); gF.add(td.dataset.flow); }
+    draw();
+  });
+
+  /* ---------- corridors ---------- */
+  function renderCorridors(rows) {
+    [['Inbound', '#corr-in', '#38BDF8'], ['Outbound', '#corr-out', '#F5A524']].forEach(([dir, sel, col]) => {
+      const box = $(sel);
+      if (bad('deals')) { failLine(box); return; }
+      const rs = rows.filter((r) => r.direction === dir);
+      const max = d3.max(rs, (r) => r.value_cr) || 1;
+      box.replaceChildren(...rs.map((r) => {
+        const row = document.createElement('div'); row.className = 'mna-brow'; row.dataset.dir = dir; row.dataset.country = r.country;
+        if (st.pin && st.pin.type === 'country' && st.pin.dir === dir && st.pin.value === r.country) row.classList.add('on');
+        const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.country;
+        const bar = document.createElement('span'); bar.className = 'bar'; const fill = document.createElement('span'); fill.style.width = (100 * r.value_cr / max) + '%'; fill.style.background = col; bar.append(fill);
+        const v = document.createElement('span'); v.className = 'v'; v.textContent = (r.value_cr ? '₹' + inr.format(r.value_cr) : 'n/d') + ' · ' + r.count;
+        row.append(nm, bar, v); return row;
+      }));
+    });
+  }
+  $('#corridors').addEventListener('click', (ev) => { const r = ev.target.closest('.mna-brow'); if (r) setPin({ type: 'country', dir: r.dataset.dir, value: r.dataset.country }); });
+
+  /* ---------- leaderboard ---------- */
+  function renderLeaders(rows) {
+    const body = $('#leaders tbody');
+    if (bad('deals')) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 4; failLine(td); tr.append(td); body.replaceChildren(tr); return; }
+    const max = d3.max(rows, (r) => r.value_cr) || 1;
+    body.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.group;
+      if (st.pin && st.pin.type === 'group' && st.pin.value === r.group) tr.classList.add('on');
+      const c1 = document.createElement('td'); c1.textContent = r.group;
+      const c2 = document.createElement('td'); c2.className = 'r'; c2.textContent = r.deals;
+      const c3 = document.createElement('td'); c3.className = 'r'; const ib = document.createElement('span'); ib.className = 'ib'; ib.style.width = Math.max(2, 60 * r.value_cr / max) + 'px'; c3.append(ib, document.createTextNode(r.value_cr ? inr.format(r.value_cr) : 'n/d'));
+      const c4 = document.createElement('td'); c4.className = 'r'; c4.textContent = r.avg_cr == null ? 'n/d' : inr.format(r.avg_cr);
+      tr.append(c1, c2, c3, c4); return tr;
+    }));
+  }
+  $('#leaders').addEventListener('click', (ev) => { const tr = ev.target.closest('tr[data-key]'); if (tr) setPin({ type: 'group', value: tr.dataset.key }); });
+
+  /* ---------- modeled valuation scatter ---------- */
+  function drawScatter(deals, eco, visible, wavg) {
+    const box = $('#scatter');
+    if (bad('economics') || bad('deals')) { failLine(box); return; }
+    clearSvg(box);
+    const pts = eco.filter((e) => isNum(e.ev_ebitda)).map((e) => ({ ...e, d: deals.find((x) => x.id === e.id) })).filter((p) => p.d);
+    if (!pts.length) return;
+    const W = Math.max(box.clientWidth, 300), H = 290;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const xmin = d3.min(pts, (p) => +p.implied_value_cr) / 1.6, xmax = d3.max(pts, (p) => +p.implied_value_cr) * 1.6;
+    const ymax = Math.ceil((d3.max(pts, (p) => +p.ev_ebitda) * 1.15) / 5) * 5;
+    const probe = svg.append('text').attr('font-size', 10).text(ymax + 'x');
+    const ml = probe.node().getComputedTextLength() + 14; probe.remove();
+    const x = d3.scaleLog([xmin, xmax], [ml, W - 14]);
+    const y = d3.scaleLinear([0, ymax], [H - 34, 14]);
+    const g = svg.append('g');
+    const xt = [10000, 20000, 50000, 100000, 200000].filter((t) => t >= xmin && t <= xmax);
+    g.selectAll('line.gy').data(y.ticks(5)).join('line').attr('x1', ml).attr('x2', W - 14).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).attr('stroke', '#1F2A3B');
+    g.selectAll('line.gx').data(xt).join('line').attr('y1', 14).attr('y2', H - 34).attr('x1', (t) => x(t)).attr('x2', (t) => x(t)).attr('stroke', '#1F2A3B');
+    g.selectAll('text.ty').data(y.ticks(5)).join('text').attr('x', ml - 6).attr('y', (t) => y(t) + 3).attr('text-anchor', 'end').attr('font-size', 10).attr('fill', '#64748B').text((t) => t + 'x');
+    g.selectAll('text.tx').data(xt).join('text').attr('x', (t) => x(t)).attr('y', H - 18).attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#64748B').text((t) => '₹' + inr.format(t / 1000) + 'k Cr');
+    if (isNum(wavg)) {
+      g.append('line').attr('x1', ml).attr('x2', W - 14).attr('y1', y(wavg)).attr('y2', y(wavg)).attr('stroke', '#F5A524').attr('stroke-opacity', .6).attr('stroke-dasharray', '5 4');
+      g.append('text').attr('x', W - 16).attr('y', y(wavg) - 5).attr('text-anchor', 'end').attr('font-size', 10).attr('fill', '#F5A524').text('Wtd avg ' + (+wavg).toFixed(1) + 'x');
+    }
+    const tip = tipBox(box);
+    const node = g.selectAll('g.pt').data(pts).join('g').attr('transform', (p) => `translate(${x(+p.implied_value_cr)},${y(+p.ev_ebitda)})`).style('cursor', 'pointer')
+      .attr('opacity', (p) => visible.has(p.id) ? 1 : 0.22)
+      .on('click', (ev, p) => { st.sel = p.id; draw(); })
+      .on('mousemove', (ev, p) => showTip(box, tip, ev, p.d.acquirer + ' → ' + p.d.target, (+p.ev_ebitda).toFixed(1) + 'x EV/EBITDA · ₹' + inr.format(+p.implied_value_cr) + ' Cr'))
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+    node.append('circle').attr('r', (p) => p.id === st.sel ? 9 : 6.5).attr('fill', (p) => sc(p.d.sector)).attr('fill-opacity', .85)
+      .attr('stroke', (p) => p.id === st.sel ? '#E2E8F0' : '#0B0F17').attr('stroke-width', (p) => p.id === st.sel ? 2 : 1.5);
+    node.append('text').attr('font-size', 10.5).attr('fill', '#E2E8F0').attr('y', 3.5).text((p) => p.d.short)
+      .each(function (p) { const w = this.getComputedTextLength(); const px = x(+p.implied_value_cr); const right = px + 12 + w < W - 14; d3.select(this).attr('x', right ? 12 : -12).attr('text-anchor', right ? 'start' : 'end'); });
+  }
+
+  function renderBanks(deals, eco) {
+    const box = $('#banks');
+    if (bad('economics')) { failLine(box); return; }
+    box.replaceChildren(...eco.filter((e) => e.multiple_metric === 'P/BV').map((e) => {
+      const d = deals.find((x) => x.id === e.id) || {};
+      const row = document.createElement('div'); row.className = 'mna-bank'; row.dataset.key = e.id;
+      const n = document.createElement('span'); n.dataset.source = 'deals'; n.dataset.field = 'short'; n.dataset.where = 'id=' + e.id; n.textContent = d.short || '—';
+      const mk = (label, field) => { const s = document.createElement('span'); s.className = 'mono'; s.append(document.createTextNode(label + ' ')); const v = document.createElement('span'); v.dataset.source = 'economics'; v.dataset.field = field; v.dataset.where = 'id=' + e.id; v.textContent = F.x(e[field]); s.append(v); return s; };
+      row.append(n, mk('P/BV', 'pbv'), mk('P/E', 'pe'));
+      return row;
+    }));
+  }
+  $('#banks').addEventListener('click', (ev) => { const r = ev.target.closest('.mna-bank'); if (r) { st.sel = r.dataset.key; draw(); } });
+
+  function renderLead(deals) {
+    const el = $('#tk-lead');
+    const p = deals.filter((d) => d.phase === 'Pending' && isNum(d.value_inr_cr)).sort((a, b) => b.value_inr_cr - a.value_inr_cr).slice(0, 2);
+    el.textContent = p.length ? p.map((d) => `${d.acquirer} → ${d.short}`).join(' and ') : '—';
+  }
+
+  /* ---------- companies tab ---------- */
+  const fmtMetric = (v, u) => {
+    if (!isNum(v)) return '—';
+    const n = +v;
+    if (u === '%') return n.toFixed(n % 1 ? 1 : 0);
+    if (u === 'GWp') return n.toFixed(1);
+    return inr.format(n);
+  };
+  function renderCompanies(rows, id) {
+    const box = $('#co-cards');
+    if (bad('companies')) { failLine(box); return; }
+    const cs = rows.filter((c) => c.id === id).sort((a, b) => (a.side === 'Acquirer' ? -1 : 1));
+    box.replaceChildren(...cs.map((c) => {
+      const card = document.createElement('div'); card.className = 'mna-cocard';
+      const head = document.createElement('div'); head.className = 'mna-cohead';
+      const side = document.createElement('span'); side.className = 'side'; side.textContent = c.side;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.dataset.source = 'companies'; nm.dataset.field = 'name'; nm.dataset.where = 'key=' + c.key; nm.textContent = c.name;
+      const meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = [c.listing, c.hq].filter(Boolean).join(' · ');
+      head.append(side, nm, meta);
+      const desc = document.createElement('div'); desc.className = 'mna-codesc' + (c.description ? '' : ' na');
+      desc.textContent = c.description || 'Detailed profile not compiled for this company yet.';
+      card.append(head, desc);
+      const ms = [1, 2, 3, 4].filter((i) => c['m' + i + '_label']);
+      if (ms.length) {
+        const fin = document.createElement('div'); fin.className = 'mna-cofin';
+        ms.forEach((i) => {
+          const cell = document.createElement('div');
+          const l = document.createElement('div'); l.className = 'lbl'; l.textContent = c['m' + i + '_label'];
+          const v = document.createElement('div'); v.className = 'v';
+          const num = document.createElement('span'); num.dataset.source = 'companies'; num.dataset.field = 'm' + i + '_value'; num.dataset.where = 'key=' + c.key;
+          num.textContent = fmtMetric(c['m' + i + '_value'], c['m' + i + '_unit']);
+          const u = document.createElement('span'); u.className = 'u'; u.textContent = c['m' + i + '_unit'];
+          v.append(num, u); cell.append(l, v); fin.append(cell);
+        });
+        card.append(fin);
+      }
+      if (c.fy || c.source) { const f = document.createElement('div'); f.className = 'mna-cofoot'; f.textContent = [c.fy, c.source].filter(Boolean).join(' · '); card.append(f); }
+      return card;
+    }));
+  }
+
+  /* ---------- capital & advisors tab ---------- */
+  const roleClass = (r) => /advisor/i.test(r) ? 'adv' : /seller|selling|claimant/i.test(r) ? 'sell' : /equity|sponsor|investor|co-investor|capital provider/i.test(r) ? 'eq' : 'fin';
+  function renderParties(rows, id) {
+    const body = $('#parties tbody'), sum = $('#cap-sum');
+    if (bad('parties')) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 4; failLine(td); tr.append(td); body.replaceChildren(tr); return; }
+    const ps = rows.filter((p) => p.id === id);
+    const order = { fin: 0, eq: 1, sell: 2, adv: 3 };
+    ps.sort((a, b) => order[roleClass(a.role)] - order[roleClass(b.role)]);
+    const counts = { fin: 0, eq: 0, sell: 0, adv: 0 }; ps.forEach((p) => { counts[roleClass(p.role)] += 1; });
+    const labels = { fin: 'Debt & underwriting', eq: 'Equity providers', sell: 'Sellers', adv: 'Advisors' };
+    sum.replaceChildren(...Object.keys(labels).map((k) => { const sp = document.createElement('span'); const b = document.createElement('b'); b.textContent = counts[k]; sp.append(b, document.createTextNode(' ' + labels[k])); return sp; }));
+    if (!ps.length) {
+      const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 4; td.style.color = '#64748B';
+      td.textContent = 'No underwriters, lenders, co-investors or advisors publicly reported for this deal (often funded from the balance sheet).';
+      tr.append(td); body.replaceChildren(tr); return;
+    }
+    body.replaceChildren(...ps.map((p) => {
+      const tr = document.createElement('tr'); tr.dataset.key = p.key;
+      const a = document.createElement('td'); a.textContent = p.name;
+      const b = document.createElement('td'); const chip = document.createElement('span'); chip.className = 'role ' + roleClass(p.role); chip.textContent = p.role; b.append(chip);
+      const c = document.createElement('td'); c.className = 'det'; c.textContent = p.type || '';
+      const d = document.createElement('td'); d.className = 'det'; d.textContent = [p.detail, p.source ? '(' + p.source + ')' : ''].filter(Boolean).join(' ');
+      tr.append(a, b, c, d); return tr;
+    }));
+  }
+
+  /* ---------- sector treemap ---------- */
+  function drawTreemap(deals, visible) {
+    const box = $('#treemap');
+    if (bad('deals')) { failLine(box); return; }
+    clearSvg(box);
+    const valued = deals.filter((d) => isNum(d.value_inr_cr) && +d.value_inr_cr > 0);
+    if (!valued.length) return;
+    const W = Math.max(box.clientWidth, 300), H = W < 600 ? 520 : 440;
+    const groups = d3.group(valued, (d) => d.sector);
+    const root = d3.hierarchy({ children: Array.from(groups, ([sector, ds]) => ({ sector, children: ds.map((d) => ({ d, value: +d.value_inr_cr })) })) })
+      .sum((n) => n.value || 0).sort((a, b) => b.value - a.value);
+    d3.treemap().size([W, H]).paddingOuter(2).paddingTop(17).paddingInner(1).round(true)(root);
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const tip = tipBox(box);
+    const sec = svg.selectAll('g.sec').data(root.children).join('g');
+    sec.append('rect').attr('x', (n) => n.x0).attr('y', (n) => n.y0).attr('width', (n) => n.x1 - n.x0).attr('height', (n) => n.y1 - n.y0).attr('fill', '#0F1623').attr('stroke', '#2C3A50');
+    sec.append('text').attr('x', (n) => n.x0 + 5).attr('y', (n) => n.y0 + 12).attr('font-size', 10.5).attr('font-weight', 600).attr('fill', (n) => sc(n.data.sector))
+      .text((n) => { const w = n.x1 - n.x0; const t = n.data.sector.toUpperCase() + '  ₹' + inr.format(n.value); return w > t.length * 6.2 ? t : (w > n.data.sector.length * 6.5 ? n.data.sector.toUpperCase() : ''); });
+    const leaf = svg.selectAll('g.leaf').data(root.leaves()).join('g').style('cursor', 'pointer')
+      .on('click', (ev, n) => selectDeal(n.data.d.id))
+      .on('mousemove', (ev, n) => { const d = n.data.d; showTip(box, tip, ev, d.acquirer + ' → ' + d.target, ['₹' + inr.format(+d.value_inr_cr) + ' Cr · ' + d.sector, d.geography + ' · ' + d.form + ' · ' + d.status]); })
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+    leaf.append('rect').attr('x', (n) => n.x0).attr('y', (n) => n.y0).attr('width', (n) => Math.max(0, n.x1 - n.x0)).attr('height', (n) => Math.max(0, n.y1 - n.y0))
+      .attr('fill', (n) => sc(n.data.d.sector)).attr('fill-opacity', (n) => visible.has(n.data.d.id) ? (n.data.d.phase === 'Pending' ? 0.42 : 0.7) : 0.12)
+      .attr('stroke', (n) => n.data.d.id === st.sel ? '#FFFFFF' : '#0B0F17').attr('stroke-width', (n) => n.data.d.id === st.sel ? 2 : 1);
+    leaf.each(function (n) {
+      const w = n.x1 - n.x0, h = n.y1 - n.y0, d = n.data.d;
+      if (w < 46 || h < 22) return;
+      const g = d3.select(this);
+      g.append('text').attr('x', n.x0 + 4).attr('y', n.y0 + 13).attr('font-size', w > 110 ? 11.5 : 10).attr('font-weight', 600).attr('fill', '#0B0F17').text(d.short).each(function () { while (this.getComputedTextLength() > w - 8 && this.textContent.length > 3) this.textContent = this.textContent.slice(0, -2) + '…'; });
+      if (h > 36) g.append('text').attr('x', n.x0 + 4).attr('y', n.y0 + 26).attr('font-size', 10).attr('fill', '#0B0F17').attr('fill-opacity', .8).text('₹' + inr.format(+d.value_inr_cr)).each(function () { if (this.getComputedTextLength() > w - 8) this.remove(); });
+      if (h > 50 && w > 90) g.append('text').attr('x', n.x0 + 4).attr('y', n.y0 + 38).attr('font-size', 9.5).attr('fill', '#0B0F17').attr('fill-opacity', .7).text(d.acquirer_group).each(function () { if (this.getComputedTextLength() > w - 8) this.remove(); });
+    });
+  }
+
+  /* ---------- sector stacked by flow ---------- */
+  const FLOW_COL = { Domestic: '#64748B', Inbound: '#38BDF8', Outbound: '#F5A524' };
+  function drawSectorStack(flowRows, totals) {
+    const box = $('#sector-stack');
+    if (bad('deals')) { failLine(box); return; }
+    clearSvg(box);
+    if (!totals.length) return;
+    const rowH = 22, W = Math.max(box.clientWidth, 280), H = totals.length * rowH + 26;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    let ml = 0; totals.forEach((t) => { const x = svg.append('text').attr('font-size', 11).text(t.sector); ml = Math.max(ml, x.node().getComputedTextLength()); x.remove(); }); ml += 10;
+    const pr = svg.append('text').attr('font-size', 10).text('₹0,00,000'); const mr = pr.node().getComputedTextLength() + 10; pr.remove();
+    const x = d3.scaleLinear([0, d3.max(totals, (t) => t.value_cr) || 1], [ml, W - mr]);
+    const tip = tipBox(box);
+    const gsel = st.f.sector;
+    totals.forEach((t, i) => {
+      const y = i * rowH + 4;
+      const dim = gsel.size && !gsel.has(t.sector);
+      const g = svg.append('g').style('cursor', 'pointer').on('click', () => { gsel.has(t.sector) ? gsel.delete(t.sector) : gsel.add(t.sector); draw(); });
+      g.append('text').attr('x', ml - 8).attr('y', y + 12).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', dim ? '#475569' : '#CBD5E1').text(t.sector);
+      let cx = ml;
+      FLOWS.forEach((f) => {
+        const r = flowRows.find((z) => z.sector === t.sector && z.geography === f);
+        const v = r ? r.value_cr : 0; if (!v) return;
+        const w = x(v) - ml;
+        g.append('rect').attr('x', cx).attr('y', y + 2).attr('width', Math.max(1, w)).attr('height', 14).attr('fill', FLOW_COL[f]).attr('opacity', dim ? 0.25 : 0.9)
+          .on('mousemove', (ev) => showTip(box, tip, ev, t.sector + ' · ' + f, ['₹' + inr.format(v) + ' Cr · ' + r.count + ' deals', Math.round(v / t.value_cr * 100) + '% of sector value']))
+          .on('mouseleave', () => { tip.style.display = 'none'; });
+        cx += w;
+      });
+      g.append('text').attr('x', x(t.value_cr) + 5).attr('y', y + 13).attr('font-size', 10).attr('fill', '#94A3B8').text('₹' + inr.format(t.value_cr));
+    });
+    svg.append('line').attr('x1', ml).attr('x2', ml).attr('y1', 2).attr('y2', H - 22).attr('stroke', '#2C3A50');
+    $('#stack-legend').replaceChildren(...FLOWS.map((f) => { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = FLOW_COL[f]; sp.append(i, document.createTextNode(f)); return sp; }));
+  }
+
+  /* ---------- sector by year ---------- */
+  const YEAR_COL = { '2025': '#475569', '2026': '#F5A524' };
+  function drawSectorYears(rows) {
+    const box = $('#sector-years');
+    if (bad('deals')) { failLine(box); return; }
+    clearSvg(box);
+    if (!rows.length) return;
+    const rowH = 26, W = Math.max(box.clientWidth, 280), H = rows.length * rowH + 20;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    let ml = 0; rows.forEach((t) => { const x = svg.append('text').attr('font-size', 11).text(t.sector); ml = Math.max(ml, x.node().getComputedTextLength()); x.remove(); }); ml += 10;
+    const pr = svg.append('text').attr('font-size', 10).text('₹0,00,000 · 00'); const mr = pr.node().getComputedTextLength() + 10; pr.remove();
+    const x = d3.scaleLinear([0, d3.max(rows, (t) => Math.max(t.value_2025, t.value_2026)) || 1], [ml, W - mr]);
+    const tip = tipBox(box);
+    rows.forEach((t, i) => {
+      const y = i * rowH + 3;
+      svg.append('text').attr('x', ml - 8).attr('y', y + 13).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', '#CBD5E1').text(t.sector);
+      [['2025', 0], ['2026', 10]].forEach(([yr, off]) => {
+        const v = t['value_' + yr], n = t['count_' + yr];
+        svg.append('rect').attr('x', ml).attr('y', y + off + 2).attr('width', Math.max(v ? 2 : 0, x(v) - ml)).attr('height', 8).attr('fill', YEAR_COL[yr])
+          .on('mousemove', (ev) => showTip(box, tip, ev, t.sector + ' · ' + yr, '₹' + inr.format(v) + ' Cr · ' + n + ' deals')).on('mouseleave', () => { tip.style.display = 'none'; });
+        if (v) svg.append('text').attr('x', x(v) + 4).attr('y', y + off + 9.5).attr('font-size', 9).attr('fill', '#94A3B8').text('₹' + inr.format(v) + ' · ' + n);
+      });
+    });
+    $('#year-legend').replaceChildren(...['2025', '2026'].map((yr) => { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = YEAR_COL[yr]; sp.append(i, document.createTextNode(yr + (yr === '2025' ? ' (incl. Dec-24)' : ' YTD'))); return sp; }));
+  }
+
+  /* ---------- sector scorecard ---------- */
+  function renderSectorTable(rows) {
+    const body = $('#sector-stats tbody');
+    if (bad('deals')) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 9; failLine(td); tr.append(td); body.replaceChildren(tr); return; }
+    body.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.sector; tr.style.setProperty('--sc', sc(r.sector));
+      if (st.f.sector.has(r.sector)) tr.classList.add('on');
+      const cells = [r.sector, r.deals, r.value_cr ? inr.format(r.value_cr) : 'n/d', r.share_pct.toFixed(1) + '%', r.avg_cr == null ? 'n/d' : inr.format(r.avg_cr), r.pending_value_cr ? inr.format(r.pending_value_cr) : '—', r.pending_share_pct + '%', r.cross_border_pct + '%', r.largest || '—'];
+      cells.forEach((t, i) => {
+        const td = document.createElement('td'); td.textContent = t;
+        if (i > 0 && i < 8) td.className = 'r';
+        if (i === 8) td.className = 'lg';
+        if (i === 6) { const b = document.createElement('span'); b.className = 'pbar'; const f = document.createElement('i'); f.style.width = r.pending_share_pct + '%'; b.append(f); td.append(b); }
+        tr.append(td);
+      });
+      return tr;
+    }));
+  }
+  $('#sector-stats').addEventListener('click', (ev) => { const tr = ev.target.closest('tr[data-key]'); if (!tr) return; const s = st.f.sector; s.has(tr.dataset.key) ? s.delete(tr.dataset.key) : s.add(tr.dataset.key); draw(); });
+
+  /* ---------- page switch ---------- */
+  $('#pages').addEventListener('click', (ev) => { const b = ev.target.closest('.mna-page-tab'); if (!b) return; st.page = b.dataset.page; dash.setLink('page-' + st.page); draw(); });
+
+  /* ---------- main ---------- */
+  function draw() {
+    const deals = rowsOf('deals'), eco = rowsOf('economics'), bridge = rowsOf('bridge'), steps = rowsOf('reg_steps'), calcs = rowsOf('deal_calcs');
+    fillStatic('kpis', rowsOf('kpis')); fillStatic('rates', rowsOf('rates')); fillStatic('macro', rowsOf('macro'));
+    renderLead(deals);
+    renderChips(deals);
+    const list = filtered(deals);
+    $('#count').textContent = deals.length ? `${list.length} of ${deals.length} deals` : '';
+    if (!st.sel || !deals.find((d) => d.id === st.sel)) st.sel = (biggest(deals) || {}).id || null;
+    if (list.length && !list.find((d) => d.id === st.sel)) st.sel = biggest(list).id;
+    $$('.mna-page-tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.page === st.page ? 'true' : 'false'));
+    $('#pg-terminal').hidden = st.page !== 'terminal';
+    $('#pg-analytics').hidden = st.page !== 'analytics';
+    const vis = new Set(list.map((d) => d.id));
+    if (st.page === 'terminal') {
+      renderTable(list);
+      renderDetail(deals, eco, calcs, bridge, steps);
+      renderCatalysts(rowsOf('catalysts'), deals);
+      renderQueue(rowsOf('approval_queue'), deals, rowsOf('queue'));
+      renderSpreads(rowsOf('spreads'));
+      drawReactions(rowsOf('reactions'), deals);
+    } else {
+      drawTreemap(deals, vis);
+      drawSectorStack(rowsOf('sector_flow'), rowsOf('by_sector'));
+      drawSectorYears(rowsOf('sector_stats'));
+      renderSectorTable(rowsOf('sector_stats'));
+      renderHeat(rowsOf('sector_flow'), rowsOf('by_sector'));
+      renderCorridors(rowsOf('corridors'));
+      drawTimeline(deals, vis);
+      drawQuarters(rowsOf('quarterly'));
+      renderLeaders(rowsOf('leaders'));
+      drawScatter(deals, eco, vis, (rowsOf('kpis')[0] || {}).wavg_ev_ebitda);
+      renderBanks(deals, eco);
+    }
+    const pin = $('#pin');
+    pin.hidden = !st.pin;
+    pin.textContent = st.pin ? (st.pin.type === 'group' ? 'Group: ' + st.pin.value : st.pin.dir + ': ' + st.pin.value) + ' ×' : '';
+  }
+  const h = location.hash.slice(1);
+  if (h && h.startsWith('tab-') && TABS.includes(h.slice(4))) st.tab = h.slice(4);
+  if (h === 'page-analytics' || h === 'sector-treemap') st.page = 'analytics';
+  dash.onData(draw);
+})();
+</script>
+</div></body></html>
